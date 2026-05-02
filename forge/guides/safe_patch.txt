@@ -4,7 +4,8 @@
 Use before changing files, especially code.
 
 ## SUMMARY
-Small patches plus run packets make Forge safe.
+Small patches plus run packets make Forge safe. Branch before risk.
+Read the packet before continuing.
 
 ## PATTERN
 1. Inspect.
@@ -15,14 +16,19 @@ Small patches plus run packets make Forge safe.
 6. Continue or recover.
 
 ## BRANCH BEFORE RISK
+BRANCH snapshots the listed files into branches/<name>/ on disk. The
+snapshot is restorable later, even if Forge itself is broken — each
+branch ships with its own restore script. Branch before any
+non-trivial patch on a file you care about.
 
     BRANCH create before_change
     BEGIN_BODY
     path/to/file.py
     END_BODY
 
-## PATCH
-Use AST ops for Python structure when possible.
+## PATCH PYTHON BY STRUCTURE
+Use AST ops for Python — they target classes, methods, and functions
+by name rather than by line number. More resilient than text matching.
 
     REPLACE path/to/file.py::main
     BEGIN_BODY
@@ -30,7 +36,9 @@ Use AST ops for Python structure when possible.
         print("patched")
     END_BODY
 
-Use text ops for exact text files.
+## PATCH FLAT FILES
+Use REPLACE_BLOCK when you need an exact text-block swap — markdown
+sections, config snippets, anything where line anchors are awkward.
 
     REPLACE_BLOCK README.md
     BEGIN_BODY
@@ -42,11 +50,28 @@ Use text ops for exact text files.
     END_NEW
     END_BODY
 
+For line-range edits use REPLACE_FILE_LINES or REPLACE_FILE_RANGE.
+HELP each op for exact directives.
+
 ## RECOVER
-Use run history and restore tools.
+Every Forge run is logged on disk. The history ops let you walk back.
 
     LIST_RUNS
-
     DIFF 20260502_123456
-
     REVERT_RUN 20260502_123456
+
+LIST_RUNS shows recent runs with timestamps. DIFF shows what files a
+specific run touched. REVERT_RUN restores the affected files to their
+pre-run state.
+
+## RULES
+- BRANCH before risk.
+- One concept per patch.
+- Read the packet before sending the next bundle.
+- If a patch FAILED_COMPILE, Forge already rolled it back. Fix the
+  syntax and retry.
+- If you're unsure, PREVIEW first.
+
+## RELATED GUIDES
+- inspect_first — discovery before editing
+- run_packet    — how to read packet output and status codes
