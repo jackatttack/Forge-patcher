@@ -1,0 +1,31 @@
+# inspect-first
+
+## WHEN TO USE
+Use when entering an unfamiliar area of the project, before patching, or when uncertain where something lives.
+
+## PATTERN
+1. Use LIST_FILES for shape.
+2. Use GREP to locate names, errors, strings, or concepts.
+3. Use LIST_TARGETS for Python file structure.
+4. Use PREVIEW for the smallest useful slice.
+5. Only then patch.
+
+## GOOD FIRST MOVES
+- LIST_FILES the relevant directory.
+- GREP for the concept or error.
+- LIST_TARGETS the Python file before editing.
+- PREVIEW the exact target or line range.
+
+## RULES
+- GREP before large PREVIEW when looking for something specific.
+- LIST_TARGETS before touching Python files.
+- PREVIEW tight ranges rather than whole large files.
+- Use HELP before unfamiliar ops.
+- Run HELP after FAILED_PARSE before retrying.
+
+## RELATED
+HELP GREP
+HELP LIST_FILES
+HELP LIST_TARGETS
+HELP PREVIEW
+GUIDE safe-patch

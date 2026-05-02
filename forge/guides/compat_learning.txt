@@ -1,0 +1,52 @@
+# compat-learning
+
+## WHEN TO USE
+Use when real Forge run packets reveal repeated model mistakes, syntax near-misses, failed parses, skipped patches, normalisations, or guard hits.
+
+## CONCEPT
+Compat learning is behavioural. It learns from how Forge is actually used.
+
+Use COMPAT_AUDIT to inspect real events from compat_events.jsonl and recent run folders.
+
+## PATTERN
+1. Run COMPAT_AUDIT.
+2. Look for repeated signals, not one-off weirdness.
+3. Decide the correct response:
+   - deterministic surface syntax miss -> compat_normalizer.py
+   - clear but unsupported intent -> compat_hints.py
+   - risky write pattern -> guard/check improvement
+   - useful workflow lesson -> GUIDE
+   - session/project continuity -> JOURNAL
+4. Patch one rule or guide at a time.
+5. Test with a real near-miss.
+6. Confirm the run packet explains what happened.
+
+## GOOD FIRST MOVES
+- COMPAT_AUDIT
+- COMPAT_AUDIT with ARGS 200
+- PREVIEW forge/compat_normalizer.py
+- PREVIEW forge/compat_hints.py
+- PREVIEW forge/compat_events.py
+- GUIDE safe-patch
+
+## EXAMPLES
+- ARG becoming ARGS is a safe normaliser.
+- LINE becoming LINES is a safe normaliser.
+- Repeated invalid directives usually improve compat_hints.py first.
+- Core edits without CONFIRM belong in guard behaviour, not normalisation.
+- Repeated anchor mismatch lessons may belong in GUIDE safe-patch.
+
+## COMMON FAILURES
+- Over-normalising from a single mistake.
+- Normalising ambiguous intent.
+- Hiding useful failures instead of teaching recovery.
+- Forgetting that some failures are valuable because they stop risky edits.
+
+## RULE
+Forge should become easier for less capable models, but not looser in ways that make dangerous edits ambiguous.
+
+## RELATED
+HELP COMPAT_AUDIT
+GUIDE forge-health
+GUIDE safe-patch
+GUIDE core-edit

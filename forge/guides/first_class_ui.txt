@@ -1,0 +1,170 @@
+# first-class-ui
+
+SUMMARY: Use when a proven CLI/op needs to become a fast, polished, lesson/work-ready UI without breaking the working engine.
+
+## WHEN TO USE
+
+Use when a CLI, op, or script has become powerful and repeatedly useful, but Jack is feeling friction because:
+- the command syntax is too slow during live work
+- useful data is buried in long output
+- the workflow needs quick filtering, cards, buttons, or previews
+- the tool is becoming central enough to deserve a first-class surface
+- the CLI has proved the engine and now needs a better interface
+
+Good examples:
+- PDF library: search, tags, page search, stitch, share
+- Journal: context, search, tag surfacing, entry cards
+- Forge: ops, guides, runs, audit, aliases
+- Maths/flashcards: expressions, generated practice, diagrams, decks
+- Sheets: filtered views, dashboards, summaries
+
+## PATTERN
+
+1. Treat the CLI as the proven engine.
+2. Do not rewrite the old UI just because it exists.
+3. Inspect existing UI attempts for reusable ideas, not obligations.
+4. Add a clean model/service layer when UI needs real return values instead of printed CLI output.
+5. Build a new shell around the highest-value live workflow.
+6. Keep old CLI/op commands working.
+7. Start additive: new files first, minimal mutation.
+8. Validate with RUN_FILE and real use.
+9. Journal the checkpoint when the UI becomes useful.
+
+The model/service layer should answer:
+- what data exists?
+- how is it classified?
+- how is it searched/filtered?
+- what action does the UI need?
+- what real path/result should be returned?
+
+The UI layer should focus on:
+- fast controls
+- search
+- filters/chips
+- cards
+- previews
+- obvious actions
+- compact live-use modes
+
+## GOOD FIRST MOVES
+
+Read recent context first:
+- JOURNAL boot
+- JOURNAL search "<tool> ui cli surfacing"
+- JOURNAL continuity <topic> if there is a handoff thread
+
+Inspect the engine:
+- HELP <op>
+- PREVIEW the CLI entry point
+- GREP for command functions
+- read enough to understand input/output/data paths
+
+Inspect existing UI attempts:
+- LIST_FILES around the app/tool directory
+- PREVIEW current UI files
+- steal visual patterns and working behaviours
+- avoid inheriting prototype mess
+
+Find the live workflow:
+- What does Jack need in three taps?
+- What happens mid-lesson or mid-work?
+- What needs sharing/exporting?
+- What should be visible while typing?
+- What should collapse once the decision is made?
+
+## DESIGN RULES
+
+Folder/source answers:
+- where does this thing live?
+- what collection/type does it belong to?
+
+Tags answer:
+- what does this teach?
+- what is this about?
+- what should search/filter find?
+
+Actions answer:
+- what can Jack do now?
+
+Prefer:
+- source/type chips as hard constraints
+- tag chips as flexible discovery
+- fuzzy tag search when used live under pressure
+- compact/collapsed modes after search
+- share/export actions when moving work between devices
+- model functions that return real paths/results
+
+Avoid:
+- hiding the most important workflow in a settings panel
+- making Jack type full commands inside a UI
+- treating printed CLI output as the only API
+- rewriting working engine code before the UI proves itself
+- making management tools before the live-use action works
+
+## PYTHONISTA UI NOTES
+
+Pythonista UI has quirks:
+- some ui classes, including ui.Button, cannot safely be subclassed
+- use composition/wrapper objects for reusable controls
+- present important tools fullscreen
+- consider hide_title_bar=True when maximum space matters
+- use console.open_in(path) for iOS share sheet workflows
+- keep run/smoke tests simple with RUN_FILE
+
+For PDF-style apps:
+- native UI is usually best for control surfaces
+- WebView is useful for rich rendering or document viewing
+- reuse proven viewers rather than rebuilding rendering early
+
+## VALIDATE / SMOKE TEST
+
+After each useful patch:
+- RUN_FILE the app or CLI
+- confirm it launches
+- confirm the key action works
+- confirm selected filters are hard constraints
+- confirm share/export opens the expected iOS sheet if relevant
+- ask Jack for visible-device feedback
+
+For UI work, the run packet only proves launch. Jack’s visible feedback is part of validation.
+
+## COMMON FAILURES
+
+Over-bundling patches:
+- If patches start failing, reduce bundle size.
+- Land one behaviour at a time.
+- Recover the app to running before continuing.
+
+Letting old UI dominate:
+- Existing UI may contain good ideas but bad structure.
+- Prefer a clean shell over reshaping a tangled prototype.
+
+Breaking live-use expectations:
+- If Jack taps Corbett, results should stay Corbett.
+- If a tool is used while teaching, typing/filtering must preserve visibility.
+- If the workflow crosses devices, share/export must be first-class.
+
+Missing the real product action:
+- In the PDF console, Stitch was more important than generic browsing.
+- Name actions using Jack's mental model, not generic labels.
+
+## RELATED
+
+GUIDE inspect-first
+GUIDE safe-patch
+GUIDE debug-crash
+GUIDE journal-continuity
+GUIDE add-custom-op
+HELP GUIDE
+HELP RUN_FILE
+
+
+## LESSON: PANEL-FIRST APP ARCHITECTURE
+
+When a CLI-backed tool grows into a serious app, split important workflows into reusable panel views rather than adding more controls to the main screen.
+
+Use the main view for the primary workflow. Use panels for secondary but important surfaces: files, clipboard, run history, Help/Guide reference, packet/console output, search libraries, inspectors, and recovery tools.
+
+Each panel should be independently buildable, laid out by its own class, and controlled by parent callbacks. This keeps the main app from becoming a tangled UI script and makes good patterns easy to recreate across Journal, PDF, Forge, Maths, and future tools.
+
+Button-first access is the default. Gestures should be treated as optional polish, not core navigation, unless they are completely reliable in Pythonista.

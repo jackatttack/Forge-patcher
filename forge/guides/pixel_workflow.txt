@@ -1,0 +1,177 @@
+# pixel-workflow
+
+SUMMARY: Use when working with Jack's Pixel 7a / Termux backend through the Forge PIXEL op.
+
+## WHEN TO USE
+
+Use Pixel when the task benefits from a Linux backend rather than local Pythonista:
+
+- package-heavy Python work
+- longer-running commands
+- server or API experiments
+- network probes
+- Linux shell tooling
+- backend build/test work
+- remote filesystem work
+- tasks that Pythonista/iOS makes awkward
+
+Do not use Pixel during normal iPhone-only Forge work unless the task needs it.
+
+## CONCEPT
+
+Pixel is a remote execution lane.
+
+iPhone / Pythonista:
+- main control surface
+- Forge bundle authoring
+- packet loop
+- Jack-facing UI/workflow
+
+Pixel / Termux:
+- Linux backend
+- Python 3 environment
+- remote Forge filesystem
+- long-running or package-heavy work
+
+PIXEL op:
+- bridge from iPhone Forge to Pixel server
+- supports direct commands
+- supports proxying normal Forge ops to the Pixel filesystem
+
+## FIRST MOVES
+
+Always check reachability before assuming Pixel is available:
+
+  PIXEL
+  ARGS: ping
+
+Then check current remote root:
+
+  PIXEL
+  ARGS: run pwd
+
+Then inspect remote project shape:
+
+  PIXEL LIST_FILES .
+  DEPTH: 2
+  FILES: no
+
+## DIRECT MODE
+
+Use direct mode for server commands and shell-style work.
+
+Examples:
+
+  PIXEL
+  ARGS: ping
+
+  PIXEL
+  ARGS: run python3 --version
+
+  PIXEL
+  ARGS: run ls -la
+
+  PIXEL
+  ARGS: run pwd
+
+Use TIMEOUT for commands that may take longer.
+
+## PROXY MODE
+
+Use proxy mode when you want normal Forge inspection against the Pixel filesystem.
+
+Examples:
+
+  PIXEL LIST_FILES forge
+  DEPTH: 2
+  FILES: no
+
+  PIXEL GREP forge
+  PATTERN: def execute
+  EXT: .py
+  LIMIT: 20
+
+  PIXEL PREVIEW forge/README.txt
+  LINES: 1-80
+
+Proxy mode should feel like ordinary Forge, but remote.
+
+## WRITE / PUSH MODE
+
+Use write or push when sending files/content to Pixel.
+
+Examples:
+
+  PIXEL
+  ARGS: write
+  DEST: ~/forge_pixel/test.txt
+  BEGIN_BODY
+  hello from iPhone
+  END_BODY
+
+Use this for small remote files, probes, scripts, and config snippets.
+
+For larger structured updates, prefer explicit pack/push flows rather than relying on hidden sync.
+
+## SAFE USAGE
+
+Do:
+- ping first
+- inspect remote root before writing
+- use proxy Forge ops for remote inspection
+- keep direct shell commands focused
+- use TIMEOUT for long-running commands
+- treat Pixel output packets as truth
+- keep iPhone as the main control surface unless Jack says otherwise
+
+Do not:
+- assume Pixel is reachable
+- assume Pixel has the same files as iPhone
+- assume remote Forge has all local custom ops
+- run destructive shell commands casually
+- let Pixel become a second conflicting source of truth without a sync plan
+
+## CURRENT KNOWN SHAPE
+
+As of initial orientation:
+
+  remote root:
+  /data/data/com.termux/files/home/forge_pixel
+
+  remote top-level:
+  forge/
+    forge_runs/
+
+  Python:
+  Python 3.13.13
+
+  Pixel custom ops are intentionally lean compared with local Forge.
+
+This guide should be updated as the Pixel environment grows.
+
+## GOOD USE CASES
+
+Good Pixel jobs:
+- install/test Linux packages
+- run backend scripts
+- host temporary local services
+- run longer probes
+- test code outside Pythonista quirks
+- build or inspect files that are easier in Termux
+- act as a compute/helper lane for iPhone Forge
+
+Bad Pixel jobs:
+- routine local Forge app edits
+- Pythonista UI work
+- iOS-specific hooks
+- anything where local filesystem state is the source of truth
+
+## RELATED
+
+HELP PIXEL
+GUIDE inspect-first
+GUIDE safe-patch
+GUIDE agentic-mode
+HELP RUN_FILE
+HELP LIST_FILES
+HELP GREP

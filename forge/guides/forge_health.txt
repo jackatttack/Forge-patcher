@@ -1,0 +1,54 @@
+# forge-health
+
+## WHEN TO USE
+Use when improving Forge itself, checking agent-facing reliability, auditing HELP/HINT coverage, or looking for drift in the op surface.
+
+## CONCEPT
+Forge health is about whether the harness is clear, safe, discoverable, and reliable for future models.
+
+Use FORGE_AUDIT for static/system checks.
+Use COMPAT_AUDIT for behavioural/run-history checks.
+
+## PATTERN
+1. Run FORGE_AUDIT.
+2. Read ISSUES, WARNINGS, POLISH, and NOTES differently.
+3. Fix one class of problem at a time.
+4. REFRESH.
+5. Re-run FORGE_AUDIT.
+6. Add or update GUIDE if the session reveals a repeatable working pattern.
+7. Journal a checkpoint if the change matters for continuity.
+
+## GOOD FIRST MOVES
+- FORGE_AUDIT
+- HELP FORGE_AUDIT
+- LIST_OPS custom
+- GUIDE guide
+- GUIDE compat-learning if failures or normalisations are involved
+
+## WHAT FORGE_AUDIT CHECKS
+- HELP rendering
+- stale op names
+- SPEC directive shapes
+- missing HELP or HINTS
+- related-op references
+- mutating ops classified wrongly
+- agent-facing drift
+
+## HOW TO READ RESULTS
+- ISSUES: reliability problems; usually fix soon.
+- WARNINGS: important drift or missing guidance.
+- POLISH: documentation debt; fix when nearby.
+- NOTES: optional cleanup or observations.
+
+## COMMON FAILURES
+- Trying to fix every warning in one batch.
+- Mixing Forge core edits with unrelated app work.
+- Adding docs without testing HELP/LIST_OPS afterwards.
+- Forgetting that parser, bridge, engine, and registry edits are core edits.
+
+## RELATED
+HELP FORGE_AUDIT
+GUIDE core-edit
+GUIDE compat-learning
+GUIDE guide
+GUIDE journal-continuity

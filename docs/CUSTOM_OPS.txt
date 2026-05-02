@@ -1,0 +1,135 @@
+Custom Ops
+==========
+
+Forge is designed to be extended.
+
+The core runtime should stay small and reliable. Personal workflow tools belong in custom ops.
+
+What a custom op is
+-------------------
+
+A custom op is a Python file that defines:
+
+- SPEC
+- optional HELP
+- optional HINTS
+- validate(parsed_op)
+- execute(ctx, parsed_op, result)
+
+Recommended location
+--------------------
+
+    forge/ops/custom/
+
+You may need to create:
+
+    forge/ops/custom/__init__.py
+
+Then enable custom loading in:
+
+    forge/config.py
+
+Change:
+
+    LOAD_OP_LAYERS = ['core']
+
+to:
+
+    LOAD_OP_LAYERS = ['core', 'custom']
+
+Then run:
+
+    REFRESH
+
+Minimal custom op example
+-------------------------
+
+Create:
+
+    forge/ops/custom/hello_op.py
+
+Contents:
+
+    # -*- coding: utf-8 -*-
+
+    SPEC = {
+        'name': 'HELLO',
+        'target_kind': 'none',
+        'body_mode': 'forbidden',
+        'allowed_directives': set(['ARGS']),
+        'required_directives': set(),
+        'summary': 'Say hello from a custom op.',
+    }
+
+    HELP = {
+        'summary': 'Say hello from a custom op.',
+        'subject': ['No subject. Optional ARGS is used as the name.'],
+        'common_failures': [],
+        'safe_usage': [
+            'Good first custom op test.',
+        ],
+        'minimal_example': [
+            'HELLO',
+            '',
+            'HELLO',
+            'ARGS: Sam',
+        ],
+        'related_ops': ['HELP', 'LIST_OPS'],
+    }
+
+    HINTS = {
+        'example': 'Try HELLO or HELLO with ARGS: your name.',
+    }
+
+    def validate(parsed_op):
+        return []
+
+    def execute(ctx, parsed_op, result):
+        name = (parsed_op.directives.get('ARGS') or 'Forge user').strip()
+        result['status'] = 'APPLIED'
+        result['message'] = 'Hello, %s!' % name
+        result['preview'] = 'Hello, %s!\n' % name
+
+Then test:
+
+    REFRESH
+
+    LIST_OPS all
+
+    HELLO
+    ARGS: Sam
+
+Good custom op ideas
+--------------------
+
+- Project-specific test runner
+- App launcher
+- File exporter
+- Personal note capture
+- Dataset search
+- API wrapper
+- Deployment helper
+- Repeated cleanup task
+
+Design advice
+-------------
+
+Good custom ops are thin wrappers around real scripts.
+
+Keep the op responsible for:
+
+- parsing Forge directives
+- validating inputs
+- calling the underlying script/function
+- returning a clear run packet message
+
+Do not cram too much logic into the op if it belongs in a reusable module.
+
+A good custom op should:
+
+- fail clearly
+- include HELP
+- include safe examples
+- avoid secrets in output
+- prefer relative paths
+- be testable with a tiny bundle

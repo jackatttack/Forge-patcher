@@ -1,0 +1,458 @@
+# strava
+
+## WHEN TO USE
+
+Use this guide when working on Jack's Strava integration, training import system, training journal sync, Strava cache/library, or the daily `strava-sync` workflow.
+
+This guide is for both:
+- human daily use after uploading a session to Strava
+- LLM/Forge maintenance work on the Strava tooling
+
+## GOAL
+
+The goal is simple:
+
+Jack finishes a training session, updates Strava, then runs one command.
+
+That command should:
+1. refresh Strava token if needed
+2. fetch recent Strava activities
+3. fetch detailed activity data including Strava notes/descriptions
+4. merge into the local Strava library without duplicates
+5. write missing clean training entries into the journal
+6. repair existing Strava journal entries if notes were fetched later
+7. avoid duplicate journal entries using `strava_id`
+
+Normal daily command:
+
+    strava-sync
+
+Or directly:
+
+    STRAVA
+    ARGS: update
+    TIMEOUT: 180
+
+## CURRENT WORKFLOW
+
+Preferred daily user workflow:
+
+    strava-sync
+
+The alias expands to a STRAVA update command.
+
+The native Forge command is:
+
+    STRAVA
+    ARGS: update
+    TIMEOUT: 180
+
+Optional windows:
+
+    strava-sync 7
+    strava-sync 14
+    strava-sync 30
+
+Native equivalents:
+
+    STRAVA
+    ARGS: update 7
+    TIMEOUT: 180
+
+    STRAVA
+    ARGS: update 30
+    TIMEOUT: 180
+
+## WHAT UPDATE DOES
+
+`STRAVA update` is the one-command maintenance flow.
+
+It runs:
+
+1. `sync [days] [detail_cap]`
+   - fetches recent Strava activities
+   - refreshes token as needed
+   - fetches detailed activity records
+   - captures Strava notes/descriptions
+   - merges into local library by `strava_id`
+
+2. `sync-journal [days] --write`
+   - reads from the local library
+   - groups activities by training day
+   - writes missing journal entries
+   - skips activities whose `strava_id` is already present
+
+3. `repair-journal-notes [days] --write`
+   - updates existing Strava journal entries from enriched cache
+   - adds notes/descriptions when they were fetched after the original journal import
+   - does not create duplicate entries
+
+## IMPORTANT GUARANTEE
+
+The system is designed to be safe to re-run.
+
+Library duplicate prevention:
+- activities are merged by `strava_id`
+
+Journal duplicate prevention:
+- daily journal entries include `strava_id:` and `strava_ids:` markers
+- `sync-journal` checks existing day files before writing
+- existing IDs are skipped
+
+Repair behaviour:
+- `repair-journal-notes` updates existing Strava journal entries
+- it does not create new journal entries
+
+## MAIN COMMANDS
+
+Check status:
+
+    STRAVA
+    ARGS: status
+
+Update library only:
+
+    STRAVA
+    ARGS: sync 30 80
+    TIMEOUT: 180
+
+Preview journal entries without writing:
+
+    STRAVA
+    ARGS: journal-preview 14
+    TIMEOUT: 120
+
+Write missing journal entries:
+
+    STRAVA
+    ARGS: sync-journal 14 --write
+    TIMEOUT: 120
+
+Repair notes in existing journal entries:
+
+    STRAVA
+    ARGS: repair-journal-notes 14 --write
+    TIMEOUT: 120
+
+Full daily workflow:
+
+    STRAVA
+    ARGS: update
+    TIMEOUT: 180
+
+Historical archive:
+
+    STRAVA
+    ARGS: archive-all 10 50
+    TIMEOUT: 300
+
+Library status:
+
+    STRAVA
+    ARGS: library-status
+
+## ALIAS
+
+Daily alias:
+
+    strava-sync
+
+Alias purpose:
+- one-line command for Jack
+- runs the complete Strava update flow
+- intended after uploading/completing activity on Strava
+
+To inspect the alias:
+
+    strava-sync ?
+
+Full alias info:
+
+    strava-sync ??
+
+Alias system notes:
+- real op names always win over aliases
+- aliases are the day-to-day vocabulary layer
+- ops remain the primitives
+
+## FILES
+
+CLI:
+
+    utils/strava/strava_cli.py
+
+Forge op:
+
+    forge/ops/custom/strava_op.py
+
+Local library:
+
+    library/strava/activities_raw.json
+    library/strava/activities_summary.md
+    library/strava/sync_state.json
+
+Secrets:
+
+    .forge_secrets/strava_token.json
+
+Temporary/staging credential files may exist under:
+
+    library/keys/
+
+Long-term, real secrets should live under `.forge_secrets`, not in packable/shared folders.
+
+## LOCAL LIBRARY
+
+`library/strava/activities_raw.json` is the source of truth for imported Strava activities.
+
+It stores normalized activity records, including:
+- `strava_id`
+- name/title
+- sport type
+- start date/local date
+- distance miles
+- moving time
+- elapsed time
+- elevation
+- average/max heart rate
+- pace or speed
+- URL
+- Strava notes/descriptions where available
+
+`activities_summary.md` is human-readable.
+It groups activities by month.
+
+`sync_state.json` records the latest sync/archive operation.
+
+## STRAVA NOTES
+
+Bulk Strava activity fetch does not reliably include user notes/descriptions.
+
+To capture notes, `sync` performs detail enrichment:
+- fetch activity list
+- fetch detail endpoint per recent activity
+- copy description/notes into `strava_note` and `description`
+- merge enriched record into the cache
+
+This is why the normal command should be:
+
+    STRAVA
+    ARGS: update
+    TIMEOUT: 180
+
+or:
+
+    strava-sync
+
+Do not rely on historical archive alone for notes. Historical archive is mainly factual bulk data unless enriched later.
+
+## JOURNAL ENTRY SHAPE
+
+Daily imported entries are factual and structured.
+
+Example shape:
+
+    ## Strava Training — 2026-04-25
+
+    source: strava
+    strava_ids: 18252008035, 18252016364
+    activity_count: 2
+    total_distance: 8.93 mi
+    total_moving_time: 1:11:24
+
+    ### Run — Saturday long run with Tom Luton
+    source: strava
+    strava_id: 18252016364
+    date: 2026-04-25T12:40:07Z
+    distance: 7.86 mi
+    moving_time: 1:02:12
+    elapsed_time: 1:04:25
+    elevation: 541 ft
+    pace: 7:55/mi
+    avg_hr: 165 bpm
+    max_hr: 184 bpm
+    strava_note: |
+      GPS messed up and cut some of it off, closer to 10 miles.
+    url: https://www.strava.com/activities/18252016364
+
+Journal entries use:
+
+    kind: training
+    tags: strava, training, auto-import
+
+## IMPORTANT DESIGN DECISION
+
+The journal should not become a giant Strava clone.
+
+Detailed historical data lives in:
+
+    library/strava/activities_raw.json
+
+The journal should contain:
+- recent day-level training entries
+- useful factual daily summaries
+- one or more higher-level historical summaries if needed
+- coaching interpretation separately, not during import
+
+The Strava import layer should remain factual.
+
+## HISTORICAL DATA
+
+Historical archive has already proven viable.
+
+Known successful pull:
+- 2,425 activities
+- range: 2017-07-11 to 2026-04-25
+- total distance: 8,322.00 mi
+
+Historical archive command:
+
+    STRAVA
+    ARGS: archive-all 10 50
+    TIMEOUT: 300
+
+Use high timeout for large archives.
+
+Prefer recent daily journal import over dumping years of daily entries into the journal.
+
+## TOKEN MANAGEMENT
+
+Status command:
+
+    STRAVA
+    ARGS: status
+
+Token file:
+
+    .forge_secrets/strava_token.json
+
+The CLI refreshes tokens when needed. Normal `sync` / `update` should keep access alive as long as:
+- client ID/secret are valid
+- refresh token is valid
+- Strava app permissions are not revoked
+
+If auth fails:
+1. run status
+2. generate auth URL if needed
+3. exchange returned localhost URL/code
+4. save refreshed token back into `.forge_secrets`
+
+Do not print full tokens or client secrets in chat or guides.
+
+## PACK SAFETY
+
+Do not pack secrets.
+
+PACK should exclude:
+- `.forge_secrets/`
+- API keys
+- tokens
+- credential files
+- `library/keys/` if it contains secrets
+
+The upgraded PACK op warns on secret-looking files, but still treat secret exclusion as mandatory.
+
+## LLM WORKFLOW
+
+When an LLM is asked to use Strava:
+
+1. Read this guide:
+
+    GUIDE strava
+
+2. Check op help if needed:
+
+    HELP STRAVA
+    HELP ALIAS
+    HELP JOURNAL
+
+3. Check status:
+
+    STRAVA
+    ARGS: status
+
+4. For normal use, run:
+
+    STRAVA
+    ARGS: update
+    TIMEOUT: 180
+
+5. If debugging journal writes, preview first:
+
+    STRAVA
+    ARGS: journal-preview 14
+    TIMEOUT: 120
+
+6. If existing entries are missing notes:
+
+    STRAVA
+    ARGS: repair-journal-notes 14 --write
+    TIMEOUT: 120
+
+7. Verify with:
+
+    STRAVA
+    ARGS: library-status
+
+    JOURNAL
+    ARGS: context training
+
+## TROUBLESHOOTING
+
+Problem: update times out
+- increase TIMEOUT
+- use smaller window, e.g. update 7 30
+
+Problem: notes missing
+- run sync/update again with enough detail cap
+- then run repair-journal-notes
+
+Problem: duplicate journal entries
+- inspect day JSON
+- check whether `strava_id` markers are present
+- duplicate-proofing depends on those markers
+
+Problem: library has data but journal search does not show it
+- journal JSON has likely been written correctly
+- index refresh may not yet be wired
+- inspect journal day file directly
+- later fix: wire proper journal index rebuild
+
+Problem: credentials missing
+- inspect `.forge_secrets/strava_token.json`
+- inspect `library/keys/` only if using temporary staging
+- do not expose keys in chat
+
+Problem: Strava status says ready for auth/exchange even after auth
+- wording may be stale/misleading
+- token presence is the key fact
+
+## FUTURE IMPROVEMENTS
+
+High priority:
+- wire proper journal index refresh after direct JSON writes
+- improve status wording once token is present
+- move all credential staging into `.forge_secrets`
+- add a small GUIDE or command output for first-time Strava setup
+
+Useful later:
+- enrich historical notes in year/month blocks
+- add activity detail repair for selected dates
+- add weekly/monthly training summaries from library
+- add journal historical summary command once stable
+- add Strava dashboard UI using the local library
+- add training analysis commands over `activities_raw.json`
+
+## PRINCIPLE
+
+The Strava integration should stay boring and reliable.
+
+Factual import first.
+No coaching interpretation during sync.
+No duplicates.
+No secrets leaked.
+One command after training:
+
+    strava-sync
+
+Done.

@@ -1,0 +1,129 @@
+Common Forge Ops
+================
+
+Use HELP before relying on exact syntax:
+
+    HELP <OP>
+
+Inspect
+-------
+
+LIST_FILES shows a folder tree.
+
+Example:
+
+    LIST_FILES .
+    DEPTH: 2
+    FILES: yes
+
+READ_FILE reads a whole text file.
+
+Example:
+
+    READ_FILE README.txt
+
+PREVIEW shows a file slice or Python target.
+
+Example:
+
+    PREVIEW app.py
+    LINES: 1-80
+
+Example:
+
+    PREVIEW app.py::main
+
+GREP searches files.
+
+Example:
+
+    GREP search text
+    FILTER: .
+    EXT: .py,.md,.txt
+    LIMIT: 20
+    CONTEXT: 2
+
+LIST_TARGETS finds patchable Python targets.
+
+Example:
+
+    LIST_TARGETS app.py
+
+Edit
+----
+
+REPLACE replaces a Python AST target.
+
+Shape:
+
+    REPLACE app.py::main
+    BEGIN_BODY
+    def main():
+        print("Hello from Forge")
+    END_BODY
+
+REPLACE_BLOCK replaces exact text in a file.
+
+Shape:
+
+    REPLACE_BLOCK README.txt
+    BEGIN_BODY
+    BEGIN_OLD
+    old text
+    END_OLD
+    BEGIN_NEW
+    new text
+    END_NEW
+    END_BODY
+
+CREATE_FILE creates a file. Parent folders are created automatically.
+
+Shape:
+
+    CREATE_FILE scratch/test.py
+    BEGIN_BODY
+    print("hello")
+    END_BODY
+
+Run and recover
+---------------
+
+RUN_FILE runs a Python file and captures stdout/stderr.
+
+Example:
+
+    RUN_FILE scratch/test.py
+
+BRANCH creates a named restore point before risky edits.
+
+Shape:
+
+    BRANCH create before_change
+    BEGIN_BODY
+    app.py
+    README.txt
+    END_BODY
+
+LIST_RUNS shows recent runs with file changes.
+
+Example:
+
+    LIST_RUNS
+
+DIFF compares a run snapshot with current files.
+
+Example:
+
+    DIFF 20260502_123456
+
+REVERT_RUN restores files changed in a previous run.
+
+Example:
+
+    REVERT_RUN 20260502_123456
+
+REFRESH reloads Forge modules after editing ops or help text.
+
+Example:
+
+    REFRESH

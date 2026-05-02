@@ -1,0 +1,58 @@
+# safe-patch
+
+## WHEN TO USE
+Use for ordinary code changes where Forge is healthy and the target is not protected core.
+
+## PATTERN
+1. Inspect first.
+2. Choose the smallest reliable patch op.
+3. Prefer AST ops for Python targets.
+4. Use explicit body fences in the actual bundle.
+5. Run a focused smoke test.
+6. Read the run packet carefully before continuing.
+
+## WHICH OP
+- Whole method, function, class, or assignment: REPLACE
+- Range inside a Python target: REPLACE_LINES
+- One Python line: REPLACE_LINE
+- Add method/function beside another: INSERT_AFTER or INSERT_BEFORE
+- Inject inside a body at an anchor: INSERT_INTO
+- Flat or non-Python file: REPLACE_FILE_LINES or REPLACE_FILE_RANGE
+- Full file rewrite: REPLACE_FILE
+
+## GOOD FIRST MOVES
+- BRANCH before meaningful edits.
+- PREVIEW the exact file or AST target.
+- LIST_TARGETS before touching Python files.
+- HELP the write op if any directive is uncertain.
+
+## VALIDATE / SMOKE TEST
+Run the smallest meaningful check:
+- RUN_FILE for a script or probe
+- REFRESH after op/help changes
+- Re-open UI manually if the change is visual
+- Read the run packet as source of truth
+
+## COMMON FAILURES
+- Anchor matched zero times: PREVIEW again and copy exact text.
+- Anchor matched multiple times: use tighter anchors or a different op.
+- FAILED_PARSE: run HELP for the op before retrying.
+- FAILED_COMPILE: Forge rolled back; fix syntax and retry.
+- Large messy target: prefer REPLACE over fragile line anchors.
+
+## RELATED
+GUIDE inspect-first
+GUIDE core-edit
+HELP REPLACE
+HELP REPLACE_LINES
+HELP REPLACE_FILE_LINES
+
+## LESSON: REPEATED ANCHORS
+
+If REPLACE_FILE_LINES skips because an anchor appears multiple times, do not fight the anchor resolver.
+
+Use the packet's suggested PREVIEW ranges, inspect the exact region, then either:
+- choose a more unique anchor, or
+- switch to REPLACE_FILE_RANGE when the line range has just been confirmed.
+
+This is especially useful for documentation files where repeated headings are common.
