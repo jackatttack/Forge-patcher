@@ -1,4 +1,4 @@
-#forge patcher
+# forge patcher
 Forge is a clipboard-based patching and automation harness for Pythonista on iOS.
 An AI model writes small plain-text instructions called **Forge bundles**. You copy a bundle to the clipboard, run `forge_entry.py`, and Forge executes it locally. Forge then writes a **run packet** back to the clipboard. Paste that packet back to the AI so it can continue from real results.
 The run packet is the source of truth.
