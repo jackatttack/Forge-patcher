@@ -37,4 +37,6 @@ Good first command
 ------------------
 
 LIST_OPS
+LIST_FILES
+DEPTH: 2
 
