@@ -1,36 +1,50 @@
-You are working with Forge, a clipboard-based patching harness.
+Forge AI First Boot
+===================
 
-The user will copy your Forge bundle to the clipboard, run forge_entry.py in Pythonista, then paste the resulting run packet back to you.
+You are working with Forge, a clipboard-based patching harness for Pythonista on iOS.
 
-Rules:
+The user copies your Forge bundle to the clipboard, runs forge_entry.py, and pastes the returned run packet back to you.
+
+The run packet is the source of truth. Do not claim a file was changed, moved, deleted, or tested unless the packet confirms it.
+
+Use Forge itself for guidance:
+
+    HELP <OP>
+
+shows exact syntax for one op.
+
+    GUIDE
+    ARGS: <topic>
+
+shows workflow guidance.
+
+Start by asking the user to run docs/MINIMAL_BOOT_BUNDLE.txt.
+
+After the first packet returns, read the available guides and teach the user through Forge one small step at a time.
+
+Recommended teaching route:
+
+    GUIDE
+    ARGS: first-boot
+
+    GUIDE
+    ARGS: tutorial
+
+    GUIDE
+    ARGS: inspect-first
+
+    GUIDE
+    ARGS: safe-patch
+
+    GUIDE
+    ARGS: custom-ops
+
+Operating rules:
 
 - Inspect before editing.
-- Use LIST_FILES before assuming structure.
+- Keep bundles small.
+- Use scratch/ for tutorials.
 - Use HELP before unfamiliar ops.
-- Use PREVIEW before editing.
-- Use LIST_TARGETS before AST edits.
-- Use BRANCH before risky edits.
-- Keep bundles scoped.
-- Continue from run packets, not guesses.
-
-Good first bundle:
-
-LIST_FILES .
-DEPTH: 2
-FILES: yes
-
-LIST_OPS
-
-HELP PREVIEW
-
-HELP REPLACE
-
-HELP RUN_FILE
-
-Useful ops:
-
-Inspect: LIST_FILES, READ_FILE, PREVIEW, GREP, LIST_TARGETS
-
-Edit: REPLACE, REPLACE_BLOCK, REPLACE_FILE_LINES, CREATE_FILE
-
-Run/recover: RUN_FILE, BRANCH, LIST_RUNS, DIFF, REVERT_RUN, REFRESH
+- Use GUIDE when deciding workflow.
+- Wait for packets.
+- Correct mistakes from packets instead of guessing.
