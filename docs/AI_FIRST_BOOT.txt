@@ -3,32 +3,34 @@ Forge AI First Boot
 
 You are working with Forge, a clipboard-based patching harness for Pythonista on iOS.
 
-The user copies your Forge bundle to the clipboard, runs forge_entry.py, and pastes the returned run packet back to you.
+Forge works through a clipboard loop:
 
-The run packet is the source of truth. Do not claim a file was changed, moved, deleted, or tested unless the packet confirms it.
+1. You write a plain-text Forge bundle.
+2. The user copies it to the clipboard.
+3. The user runs forge_entry.py.
+4. Forge executes the bundle locally.
+5. Forge writes a run packet back to the clipboard.
+6. The user pastes that packet back to you.
 
-Your first response must be only the minimal boot bundle below. Do not explain it first. Do not add commentary. The user will copy it, run forge_entry.py, and paste the packet back.
+The run packet is the source of truth. Do not claim that files were changed, moved, deleted, or tested unless the packet confirms it.
+
+Your first response must contain only the runnable Forge bundle below. Do not explain it first. Do not add commentary. The user will copy your response, run forge_entry.py, and paste the packet back.
 
 First bundle to output:
 
     LIST_FILES .
-
     DEPTH: 2
-
     FILES: yes
 
     LIST_OPS
 
     GUIDE
-
     ARGS: list
 
     GUIDE
-
     ARGS: first-boot
 
     GUIDE
-
     ARGS: tutorial
 
     HELP GUIDE
@@ -39,66 +41,22 @@ First bundle to output:
 
     HELP RUN_FILE
 
-After the packet returns:
+After the first packet returns:
 
 - Read the packet carefully.
-
-- Use GUIDE output to orient yourself.
-
+- Treat the packet as confirmed reality.
+- Use HELP for exact op syntax.
+- Use GUIDE for workflow guidance.
 - Teach the user through Forge one small step at a time.
-
 - Prefer scratch/ for tutorial work.
-
-- Use HELP before unfamiliar ops.
-
-- Use GUIDE when deciding workflow.
-
-- Keep bundles small.
-
-- Wait for packets.
-
+- Keep bundles small and scoped.
+- Inspect before editing.
+- Wait for packets before continuing.
 - Correct mistakes from packets instead of guessing.
 
 Useful guide route:
 
     GUIDE
-
-    ARGS: tutorial
-
-    GUIDE
-
-    ARGS: inspect-first
-
-    GUIDE
-
-    ARGS: safe-patch
-
-    GUIDE
-
-    ARGS: custom-ops
-
-
-Use Forge itself for guidance:
-
-    HELP <OP>
-
-shows exact syntax for one op.
-
-    GUIDE
-    ARGS: <topic>
-
-shows workflow guidance.
-
-Start by asking the user to run docs/MINIMAL_BOOT_BUNDLE.txt.
-
-After the first packet returns, read the available guides and teach the user through Forge one small step at a time.
-
-Recommended teaching route:
-
-    GUIDE
-    ARGS: first-boot
-
-    GUIDE
     ARGS: tutorial
 
     GUIDE
@@ -110,12 +68,6 @@ Recommended teaching route:
     GUIDE
     ARGS: custom-ops
 
-Operating rules:
+Important teaching rule:
 
-- Inspect before editing.
-- Keep bundles small.
-- Use scratch/ for tutorials.
-- Use HELP before unfamiliar ops.
-- Use GUIDE when deciding workflow.
-- Wait for packets.
-- Correct mistakes from packets instead of guessing.
+Do not send the whole tutorial as one giant bundle. Explain one step, send one small bundle, wait for the packet, then explain what happened.
