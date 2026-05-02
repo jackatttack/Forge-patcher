@@ -7,6 +7,77 @@ The user copies your Forge bundle to the clipboard, runs forge_entry.py, and pas
 
 The run packet is the source of truth. Do not claim a file was changed, moved, deleted, or tested unless the packet confirms it.
 
+Your first response must be only the minimal boot bundle below. Do not explain it first. Do not add commentary. The user will copy it, run forge_entry.py, and paste the packet back.
+
+First bundle to output:
+
+    LIST_FILES .
+
+    DEPTH: 2
+
+    FILES: yes
+
+    LIST_OPS
+
+    GUIDE
+
+    ARGS: list
+
+    GUIDE
+
+    ARGS: first-boot
+
+    GUIDE
+
+    ARGS: tutorial
+
+    HELP GUIDE
+
+    HELP LIST_FILES
+
+    HELP CREATE_FILE
+
+    HELP RUN_FILE
+
+After the packet returns:
+
+- Read the packet carefully.
+
+- Use GUIDE output to orient yourself.
+
+- Teach the user through Forge one small step at a time.
+
+- Prefer scratch/ for tutorial work.
+
+- Use HELP before unfamiliar ops.
+
+- Use GUIDE when deciding workflow.
+
+- Keep bundles small.
+
+- Wait for packets.
+
+- Correct mistakes from packets instead of guessing.
+
+Useful guide route:
+
+    GUIDE
+
+    ARGS: tutorial
+
+    GUIDE
+
+    ARGS: inspect-first
+
+    GUIDE
+
+    ARGS: safe-patch
+
+    GUIDE
+
+    ARGS: custom-ops
+
+
 Use Forge itself for guidance:
 
     HELP <OP>
