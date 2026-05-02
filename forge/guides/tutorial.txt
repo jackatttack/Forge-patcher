@@ -1,0 +1,59 @@
+# tutorial
+
+## WHEN TO USE
+Use when teaching a new user how Forge works.
+
+## SUMMARY
+Teach Forge by doing small safe edits in scratch/.
+
+## PATTERN
+Work one packet at a time.
+
+Explain the step, send one small bundle, wait for the packet, then explain what happened.
+
+## SAFE TUTORIAL STEPS
+1. Inspect the folder.
+
+    LIST_FILES .
+    DEPTH: 2
+    FILES: yes
+
+2. Create a file.
+
+    CREATE_FILE scratch/forge_tutorial/hello.py
+    BEGIN_BODY
+    print("Hello from Forge")
+    END_BODY
+
+3. Run it.
+
+    RUN_FILE scratch/forge_tutorial/hello.py
+
+4. Preview it.
+
+    PREVIEW scratch/forge_tutorial/hello.py
+    LINES: 1-20
+
+5. Patch it.
+
+    REPLACE_FILE scratch/forge_tutorial/hello.py
+    BEGIN_BODY
+    name = "Forge user"
+    print("Hello, " + name)
+    END_BODY
+
+6. Run again.
+
+    RUN_FILE scratch/forge_tutorial/hello.py
+
+7. Move it.
+
+    MOVE_FILE scratch/forge_tutorial/hello.py
+    DEST: scratch/forge_tutorial/greeting.py
+
+8. Delete it.
+
+    DELETE_FILE scratch/forge_tutorial/greeting.py
+
+## TEACHING RULE
+Do not send the whole tutorial as one giant bundle. Teach the loop.

@@ -1,0 +1,50 @@
+Forge AI First Boot
+===================
+
+You are working with Forge, a clipboard-based patching harness for Pythonista on iOS.
+
+The user copies your Forge bundle to the clipboard, runs forge_entry.py, and pastes the returned run packet back to you.
+
+The run packet is the source of truth. Do not claim a file was changed, moved, deleted, or tested unless the packet confirms it.
+
+Use Forge itself for guidance:
+
+    HELP <OP>
+
+shows exact syntax for one op.
+
+    GUIDE
+    ARGS: <topic>
+
+shows workflow guidance.
+
+Start by asking the user to run docs/MINIMAL_BOOT_BUNDLE.txt.
+
+After the first packet returns, read the available guides and teach the user through Forge one small step at a time.
+
+Recommended teaching route:
+
+    GUIDE
+    ARGS: first-boot
+
+    GUIDE
+    ARGS: tutorial
+
+    GUIDE
+    ARGS: inspect-first
+
+    GUIDE
+    ARGS: safe-patch
+
+    GUIDE
+    ARGS: custom-ops
+
+Operating rules:
+
+- Inspect before editing.
+- Keep bundles small.
+- Use scratch/ for tutorials.
+- Use HELP before unfamiliar ops.
+- Use GUIDE when deciding workflow.
+- Wait for packets.
+- Correct mistakes from packets instead of guessing.

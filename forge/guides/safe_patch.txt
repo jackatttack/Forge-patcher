@@ -1,0 +1,52 @@
+# safe-patch
+
+## WHEN TO USE
+Use before changing files, especially code.
+
+## SUMMARY
+Small patches plus run packets make Forge safe.
+
+## PATTERN
+1. Inspect.
+2. Branch before risky changes.
+3. Patch one concept.
+4. Run or preview the result.
+5. Read the packet.
+6. Continue or recover.
+
+## BRANCH BEFORE RISK
+
+    BRANCH create before_change
+    BEGIN_BODY
+    path/to/file.py
+    END_BODY
+
+## PATCH
+Use AST ops for Python structure when possible.
+
+    REPLACE path/to/file.py::main
+    BEGIN_BODY
+    def main():
+        print("patched")
+    END_BODY
+
+Use text ops for exact text files.
+
+    REPLACE_BLOCK README.md
+    BEGIN_BODY
+    BEGIN_OLD
+    old text
+    END_OLD
+    BEGIN_NEW
+    new text
+    END_NEW
+    END_BODY
+
+## RECOVER
+Use run history and restore tools.
+
+    LIST_RUNS
+
+    DIFF 20260502_123456
+
+    REVERT_RUN 20260502_123456

@@ -1,0 +1,59 @@
+Forge op layers
+================
+
+Forge separates the operation surface into layers.
+
+Core layer
+----------
+Loaded by default and required for a minimal/shareable Forge.
+
+Core contains the portable runtime surface:
+- inspect files and code
+- preview targets
+- edit files and AST targets
+- run files
+- manage files
+- recover from mistakes
+- branch/checkpoint
+- pack/share
+- refresh modules
+- install pure-Python packages
+
+A minimal shared Forge can run with:
+
+LOAD_OP_LAYERS = ['core']
+
+Custom layer
+------------
+Personal/user workflow layer.
+
+Custom contains integrations and opinionated workflows:
+- Journal
+- Notes
+- PDF library
+- Sheets
+- Strava/training
+- iOS/Shortcuts helpers
+- Pixel/LLM/AShell
+- Forge UI CODE launcher
+- personal audits/guides/sync tools
+
+Jack's local Forge normally runs with:
+
+LOAD_OP_LAYERS = ['core', 'custom']
+
+Why this split exists
+---------------------
+Forge should be shareable without carrying Jack's personal data systems,
+private workflows, app surfaces, or external integrations.
+
+People should be able to build their own custom ops for their own workflows
+without changing the core engine.
+
+Config
+------
+The active layers are controlled in forge/config.py:
+
+LOAD_OP_LAYERS = ['core', 'custom']
+
+Change this to ['core'] to test the minimal/shareable surface.

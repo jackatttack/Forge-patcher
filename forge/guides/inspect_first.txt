@@ -1,0 +1,36 @@
+# inspect-first
+
+## WHEN TO USE
+Use before editing unfamiliar files or folders.
+
+## SUMMARY
+Forge work should start with discovery, not guessing.
+
+## PATTERN
+1. List files.
+2. Read or preview relevant files.
+3. List Python targets before AST edits.
+4. Ask HELP for exact op syntax.
+5. Patch only after the target is understood.
+
+## USEFUL BUNDLE
+
+    LIST_FILES .
+    DEPTH: 2
+    FILES: yes
+
+    GREP search term
+    FILTER: .
+    EXT: .py,.md,.txt
+    LIMIT: 20
+    CONTEXT: 2
+
+    PREVIEW path/to/file.py
+    LINES: 1-120
+
+    LIST_TARGETS path/to/file.py
+
+## AVOID
+- Editing files you have not previewed.
+- Guessing AST target names.
+- Sending large bundles before understanding structure.
