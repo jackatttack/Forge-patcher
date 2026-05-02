@@ -1,7 +1,7 @@
 # first-boot
 
 ## WHEN TO USE
-Use when a new AI model or new user is starting with Forge for the first time.
+Use when a new AI model or a new user is starting with Forge for the first time.
 
 ## SUMMARY
 Forge is a clipboard-based patching harness. The AI writes bundles, the user runs forge_entry.py, and Forge returns a run packet.
@@ -17,6 +17,7 @@ Forge is a clipboard-based patching harness. The AI writes bundles, the user run
 The run packet is the source of truth.
 
 ## FIRST BUNDLE
+Keep it minimal. Three ops are enough to orient.
 
     LIST_FILES .
     DEPTH: 2
@@ -27,15 +28,20 @@ The run packet is the source of truth.
     GUIDE
     ARGS: list
 
-    HELP LIST_FILES
-
-    HELP CREATE_FILE
-
-    HELP RUN_FILE
+After the packet returns, the AI knows the repo shape, the available
+ops, and the available guides. That's enough to start a real
+conversation about what the user wants to do.
 
 ## RULES
 - Inspect before editing.
 - Keep bundles small.
-- Use HELP for exact syntax.
-- Use GUIDE for workflows.
+- One concept per teaching bundle.
+- Use HELP <OP> for exact syntax. Always after a FAILED_PARSE.
+- Use GUIDE for workflow patterns.
 - Wait for the packet before claiming success.
+
+## RELATED GUIDES
+- the_loop      — what the clipboard cycle is and why
+- run_packet    — how to read a packet
+- tutorial      — hands-on lessons in scratch/
+- teaching_style — for the AI, how to teach Forge
