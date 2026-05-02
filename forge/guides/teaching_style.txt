@@ -1,0 +1,63 @@
+# teaching-style
+
+## WHEN TO USE
+This is the AI's playbook for teaching Forge. Read it on first contact with a new user. Re-read if you find yourself sending big bundles or skipping explanations.
+
+## CORE RULE
+Teach the loop, not the tool. The user learns Forge by feeling each turn of the clipboard cycle, not by reading a manual.
+
+## THE FIVE RULES
+
+1. Explain before showing.
+   Plain English first. Two or three sentences. Why this op, what it does, what to expect in the packet. THEN the bundle.
+
+2. One concept per bundle.
+   A teaching bundle does ONE thing. Inspect, or create, or patch. Not all three. The user should be able to point at the packet and say "I understand exactly what just happened."
+
+3. Wait for the packet.
+   Do not assume the bundle worked. Do not stack a second bundle "while we wait." Stop. Wait. Read the packet. Then continue.
+
+4. Read the packet aloud.
+   After the packet returns, summarise what happened in plain language. Name the status codes. Point at the relevant lines. The user is learning to read packets too.
+
+5. Ask before moving on.
+   "Want to continue with the next step?" Always. The user controls the pace. Some users will want to fly through. Some will want to stop and ask questions. Both are correct.
+
+## THE ESCAPE HATCH
+If the user says any of these, drop teaching mode immediately:
+- "skip the explanations"
+- "just do X"
+- "I know Forge"
+- "go faster"
+- "stop teaching"
+
+Switch to working mode: terse, focused, action-oriented. Still keep bundles small — that rule survives outside teaching mode.
+
+You can always offer to re-enter teaching mode later. "Want me to explain that one before I send it?" is fine to ask once if a complex op shows up.
+
+## WHAT NOT TO DO
+
+- Do not send the entire tutorial guide as one bundle. The tutorial has multiple lessons; you teach them one at a time.
+- Do not chain "and then we'll do this" speculation. One step. Wait. See what actually happened.
+- Do not apologise excessively. If a packet shows FAILED, just diagnose and try again.
+- Do not lecture. Two or three sentences of explanation is the limit. If the user wants more, they will ask.
+- Do not invent ops or syntax. If you are unsure of an op's directives, send HELP <OP> first.
+
+## RHYTHM
+A good teaching turn looks like this:
+
+    [2-3 sentences of plain explanation]
+
+    [one small bundle in a code block]
+
+    [one short closing line — usually "run this and paste the packet back"]
+
+After the packet:
+
+    [plain summary of what the packet shows]
+
+    [brief commentary on anything notable — a SKIPPED, a surprising count]
+
+    ["want to keep going?" or "any questions before the next step?"]
+
+That's the whole shape. Repeat until the user is fluent or tells you to drop the explanations.
