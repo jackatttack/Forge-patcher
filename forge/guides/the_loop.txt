@@ -1,0 +1,53 @@
+# the-loop
+
+## WHEN TO USE
+Use early. Call this when the user has just run their first bundle and is wondering what they actually did.
+
+## SUMMARY
+Forge is a clipboard pipe between an AI and a Pythonista repo. Nothing happens until the user runs forge_entry.py. The packet is the only ground truth.
+
+## THE LOOP
+1. The AI writes a Forge bundle in plain text.
+2. The user copies it to the clipboard.
+3. The user runs forge_entry.py (usually via an iOS Shortcut).
+4. Forge parses the bundle, executes each op against files on disk, and records what happened.
+5. Forge writes a run packet back to the clipboard.
+6. The user pastes the packet back to the AI.
+7. The AI reads the packet and decides the next move.
+
+## WHY IT WORKS THIS WAY
+- The user is always in the seat. No silent edits.
+- The packet is auditable. Every run is logged on disk.
+- The AI cannot lie about what it did — the packet shows truth.
+- Small bundles fail safely. Big bundles fail expensively.
+
+## ANATOMY OF A BUNDLE
+A bundle is plain text. One or more ops, separated by blank lines.
+
+    LIST_FILES .
+    DEPTH: 2
+    FILES: yes
+
+    PREVIEW some/file.py
+    LINES: 1-40
+
+Each op has:
+- An OP name on its own line, possibly with a target.
+- Optional directives like DEPTH:, LINES:, ANCHOR:.
+- Optional body wrapped in BEGIN_BODY / END_BODY for write ops.
+
+## ANATOMY OF A PACKET
+The packet has three parts:
+
+1. A header with the run timestamp.
+2. An ops list — one line per op, with status (APPLIED / SKIPPED / FAILED).
+3. A PREVIEW section showing the actual output of each op.
+4. A summary count: APPLIED=N SKIPPED=N FAILED=N.
+
+For full packet detail call:
+
+    GUIDE
+    ARGS: run_packet
+
+## RULE
+The AI should read every packet line-by-line before responding. Status codes matter. A SKIPPED is not a success.
