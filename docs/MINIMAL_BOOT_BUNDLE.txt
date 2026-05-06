@@ -4,16 +4,19 @@ FILES: yes
 
 LIST_OPS
 
-GUIDE
-ARGS: list
+DOCS
+OPEN: onboarding
+SUGGEST: concepts, the-loop, run-packet, tutorial-loop, inspect-first, safe-patch
 
-GUIDE
-ARGS: first-boot
+LINKOS
+ARGS: home
 
-GUIDE
-ARGS: tutorial
+LINKOS
+ARGS: docs onboarding
 
-HELP GUIDE
+HELP DOCS
+
+HELP LINKOS
 
 HELP LIST_FILES
 
