@@ -4,7 +4,7 @@ Forge is a clipboard-based patching and automation harness for Pythonista on iOS
 
 You work with an AI assistant. The assistant writes a plain-text Forge bundle. You copy that bundle to your clipboard, run forge_entry.py in Pythonista, and Forge executes the bundle locally. Forge then writes a run packet back to your clipboard. You paste that packet back to the assistant.
 
-The run packet is the source of truth. The assistant should not claim a file changed, moved, deleted, or tested unless the packet confirms it.
+The run packet is the source of truth. The assistant should not claim a file changed, moved, deleted, uploaded, or tested unless the packet confirms it.
 
 ## The loop
 
@@ -20,7 +20,9 @@ Forge gives an AI a safe local command surface:
 - create, move, copy, and delete files
 - checkpoint before risky edits
 - recover from bad runs
-- surface onboarding docs through LinkOS
+- surface onboarding docs
+
+Forge gives the user a LinkOS surface after each run. The packet is copied for the AI; LinkOS is rendered at the bottom of the Pythonista console for the human.
 
 Forge is not background automation. It is a tight human-in-the-loop workflow.
 
@@ -32,9 +34,7 @@ You need Pythonista on iOS or iPadOS.
 2. Open forge_entry.py in Pythonista.
 3. Run it once.
 
-On first run, if your clipboard does not contain a valid Forge bundle, Forge may return a failed-parse run packet. That is expected. The packet should still help orient you, and Forge can surface LinkOS, the text-first command surface.
-
-From LinkOS you can open onboarding, docs, tutorials, safety tools, recent runs, and file surfaces.
+On first run, if your clipboard does not contain a valid Forge bundle, Forge may return a failed-parse run packet. That is expected. The packet should still help orient you, and forge_entry.py should render LinkOS afterwards as the final console surface.
 
 For a faster loop, create an iOS Shortcut that runs forge_entry.py, then pin that Shortcut somewhere convenient.
 
@@ -42,9 +42,9 @@ For a faster loop, create an iOS Shortcut that runs forge_entry.py, then pin tha
 
 Open docs/AI_FIRST_BOOT.txt and paste it into a fresh AI chat.
 
-That file tells the assistant how Forge works and tells it to send you a small starter bundle. Copy the starter bundle, run forge_entry.py, and paste the returned packet back.
+That file tells the assistant how Forge works and tells it to ask you to run docs/MINIMAL_BOOT_BUNDLE.txt. Copy the boot bundle, run forge_entry.py, and paste the returned packet back.
 
-After that, the assistant should guide you through Forge using LinkOS, docs, guides, and the run packet.
+After that, the assistant should guide you through Forge using docs, HELP, LinkOS, and the run packet.
 
 ## Useful first bundle
 
@@ -58,12 +58,15 @@ LIST_OPS
 
 DOCS
 OPEN: onboarding
-SUGGEST: concepts, the-loop, run-packet, tutorial-loop
+SUGGEST: concepts, the-loop, run-packet, tutorial-loop, inspect-first, safe-patch
 
-LINKOS
-ARGS: home
+HELP DOCS
+
+HELP LINKOS
 
 Run that through Forge and paste the packet back to the assistant.
+
+LinkOS should render automatically after the packet. You do not need to include a LINKOS op in the first bundle.
 
 ## Learning Forge
 
@@ -82,7 +85,7 @@ Important starting points:
 
 For exact syntax, the assistant should use HELP followed by the op name.
 
-For workflow guidance, it should use DOCS or relevant docs surfaced through LinkOS.
+For workflow guidance, it should use DOCS and the LinkOS surface rendered after each run.
 
 ## Recovery
 
@@ -95,7 +98,7 @@ Useful recovery ops:
 - REVERT_RUN <run_id>: restore files from a run snapshot
 - BRANCH create <name>: checkpoint files before risky work
 
-Before risky edits, the assistant should branch first.
+Before risky edits, the assistant should consider whether a branch is needed. For normal small documentation edits, branches are usually unnecessary.
 
 ## Core rule
 
