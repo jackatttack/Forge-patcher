@@ -1,0 +1,69 @@
+# onboarding
+
+## SUMMARY
+Start here if you are new to Forge. Forge lets an LLM help you work on local code while you stay in control.
+
+## WHEN TO USE
+Use this when opening Forge for the first time, coming back after a break, or helping someone understand the basic workflow.
+
+## WHAT FORGE IS
+Forge is a local Pythonista development harness.
+
+The LLM writes a plain-text bundle. You choose when to run it. Forge runs it locally and returns a run packet showing exactly what happened.
+
+The packet is the source of truth.
+
+## FASTEST START
+From LinkOS Home, tap Start.
+
+Start copies a first-time starter bundle to your clipboard. Paste it into an LLM of your choice and it will guide you through Forge using the onboarding docs and tutorials.
+
+## STARTER BUNDLE
+If you want to copy it manually, use this:
+
+    @forge-bundle llm-first-time-starter
+    DOCS
+    OPEN: llm-first-time-guide, onboarding
+    SUGGEST: concepts, the-loop, run-packet, tutorial, tutorial-loop
+    @end-forge-bundle
+
+## THE BASIC LOOP
+1. The LLM gives you a Forge bundle.
+2. You copy the bundle.
+3. You run the Forge Shortcut.
+4. Forge executes the bundle on your device.
+5. Forge copies a run packet back to your clipboard.
+6. You paste the packet back into the chat.
+7. The LLM reads the packet and decides the next safe step.
+
+Nothing is confirmed until the packet comes back.
+
+## YOUR ROLE
+You stay in control.
+
+You can read a bundle before running it. You can refuse it. You can ask for a smaller one. You can ask what it does.
+
+## FIRST THINGS TO LEARN
+Start with:
+
+- [[concepts]] — key vocabulary
+- [[the-loop]] — how the clipboard workflow works
+- [[run-packet]] — how to read Forge output
+- [[tutorial]] — learning hub
+- [[tutorial-loop]] — first hands-on lesson
+
+## SAFE RULE
+For real work:
+
+    inspect first
+    branch before risk
+    patch small
+    verify with the packet
+
+## RELATED
+- llm-first-time-guide — teaching contract for an LLM
+- concepts — vocabulary
+- the-loop — clipboard workflow
+- run-packet — reading packets
+- tutorial — learning hub
+- safe-patch — safe edits and recovery
