@@ -30,8 +30,8 @@ def home():
     doc_hero('LinkOS Home', 'forge command surface')
 
     doc_inline(
-        'New here? Tap Start to copy a first-time LLM starter bundle. '
-        'Paste it into an LLM and it will guide you through Forge. '
+        'New here? Tap Start to copy the first-time LLM guide. '
+        'Paste that guide into an LLM first; it will explain Forge and give you the first runnable bundle. '
         'You can also read [[onboarding]] or jump into [[tutorial]].',
         source='home:intro',
     )
@@ -46,7 +46,7 @@ def home():
         doc_text('No Forge runs yet. Run a bundle and check back here.', tone='muted')
 
     doc_tile_grid('workbench', [
-        ('🏁 ', 'Start',     'copy starter',    ('start',),                  'success'),
+        ('🏁 ', 'Start',     'copy LLM guide',  ('start',),                  'success'),
         ('📖 ', 'Docs',      'learn Forge',     ('docs',),                   'accent'),
         ('📁 ', 'Files',     'browse project',  ('files', '.'),              'cyan'),
         ('◎ ',  'Runs',      'history',         ('runs',),                   'success'),
