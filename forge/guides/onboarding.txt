@@ -16,16 +16,16 @@ The packet is the source of truth.
 ## FASTEST START
 From LinkOS Home, tap Start.
 
-Start copies a first-time starter bundle to your clipboard. Paste it into an LLM of your choice and it will guide you through Forge using the onboarding docs and tutorials.
+Start copies the first-time LLM guide to your clipboard. Paste that guide into an LLM before running any Forge bundle.
 
-## STARTER BUNDLE
-If you want to copy it manually, use this:
+The guide teaches the LLM what Forge is, what a runnable bundle looks like, and exactly what first bundle it should give you.
 
-    @forge-bundle llm-first-time-starter
-    DOCS
-    OPEN: llm-first-time-guide, onboarding
-    SUGGEST: concepts, the-loop, run-packet, tutorial, tutorial-loop
-    @end-forge-bundle
+## MANUAL START
+If Start cannot copy automatically, manually copy the contents of:
+
+    docs/AI_FIRST_BOOT.txt
+
+Paste that text into an LLM. Do not run it as a Forge bundle.
 
 ## THE BASIC LOOP
 1. The LLM gives you a Forge bundle.
@@ -38,10 +38,20 @@ If you want to copy it manually, use this:
 
 Nothing is confirmed until the packet comes back.
 
-## YOUR ROLE
-You stay in control.
+## PROJECT SCOPE
+Forge runs against an active project root.
 
-You can read a bundle before running it. You can refuse it. You can ask for a smaller one. You can ask what it does.
+In contained mode, Forge works inside its own install folder. This is safest for first use.
+
+In root launcher mode, Forge launchers live at Pythonista Documents root and can work across your wider Pythonista workspace.
+
+Use [[root-launcher-mode]] when you want more power.
+- [[concepts]] — key vocabulary
+- [[the-loop]] — how the clipboard workflow works
+- [[run-packet]] — how to read Forge output
+- [[root-launcher-mode]] — contained mode versus wider workspace access
+- [[tutorial]] — learning hub
+- [[tutorial-loop]] — first hands-on lesson
 
 ## FIRST THINGS TO LEARN
 Start with:
@@ -51,12 +61,13 @@ Start with:
 - [[run-packet]] — how to read Forge output
 - [[tutorial]] — learning hub
 - [[tutorial-loop]] — first hands-on lesson
-
-## SAFE RULE
-For real work:
-
-    inspect first
-    branch before risk
+- llm-first-time-guide — teaching contract for an LLM
+- concepts — vocabulary
+- the-loop — clipboard workflow
+- run-packet — reading packets
+- root-launcher-mode — project scope and wider access
+- tutorial — learning hub
+- safe-patch — safe edits and recovery
     patch small
     verify with the packet
 
