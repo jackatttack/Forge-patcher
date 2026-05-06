@@ -1,0 +1,202 @@
+# tutorial-core-edit
+
+## SUMMARY
+Learn how to edit Forge core files safely. Core edits need extra care because they can break parsing, execution, packets, recovery, or the Shortcut loop.
+
+## WHEN TO USE
+Use this before touching Forge internals such as parser, engine, bridge, run packet, validators, core guard, or the Shortcut entry point.
+
+## GOAL
+Learn the safe core-edit pattern:
+
+1. Identify whether a file is core.
+2. Branch before touching it.
+3. Inspect the exact target.
+4. Patch small.
+5. Run smoke tests.
+6. Refresh if needed.
+7. Keep recovery available.
+
+## WHAT COUNTS AS CORE
+Core files include anything that can break Forge's ability to run bundles or recover from mistakes.
+
+Examples:
+- forge_entry.py
+- forge/parser_main.py
+- forge/engine.py
+- forge/bridge.py
+- forge/run_packet.py
+- forge/validators.py
+- forge/core_guard.py
+- core ops under forge/ops/core/
+
+If unsure, treat the file as core.
+
+## WHY CORE GUARD EXISTS
+Core guard blocks risky edits unless the run proves you are acting deliberately.
+
+Do not fight core guard.
+
+If it blocks you, the fix is usually:
+- branch first
+- use the required confirmation pattern if needed
+- make a smaller patch
+- smoke test immediately
+
+## STEP 1 — READ CORE REFERENCES
+Start with the existing core-edit and recovery docs.
+
+    @forge-bundle tutorial-core-edit-read
+    DOCS
+    OPEN: core-edit, safe-patch, tutorial-recovery
+    SUGGEST: run-packet, tutorial-failure-reading
+    @end-forge-bundle
+
+## EXPECT
+The packet should render the safety docs.
+
+Read them before attempting real core changes.
+
+## STEP 2 — INSPECT BEFORE TOUCHING
+Use this shape before editing a core Python file.
+
+    @forge-bundle tutorial-core-edit-inspect
+    LIST_TARGETS forge/bridge.py
+
+    PREVIEW forge/bridge.py
+    LINES: 1-120
+
+    DOCS
+    SUGGEST: inspect-first, safe-patch
+    @end-forge-bundle
+
+## EXPECT
+The packet should show patchable targets and source lines.
+
+Do not patch from memory. Patch from the latest preview.
+
+## STEP 3 — BRANCH BEFORE RISK
+Create a branch for the exact files you may touch.
+
+This is an example shape. Change the file list for your real task.
+
+    @forge-bundle tutorial-core-edit-branch-shape
+    BRANCH create before_core_edit_example
+    BEGIN_BODY
+    forge/bridge.py
+    forge/run_packet.py
+    END_BODY
+    @end-forge-bundle
+
+## EXPECT
+The packet should show a branch was created.
+
+That branch includes a standalone restore script.
+
+## STEP 4 — PATCH SMALL
+For core edits, prefer one small change per bundle.
+
+Good:
+- one function
+- one route
+- one HELP entry
+- one safe bug fix
+
+Bad:
+- parser + engine + shortcut + UI in one bundle
+- several unrelated fixes
+- patching without a preview
+- editing core late at night without a branch
+
+## STEP 5 — SMOKE TEST
+After a core edit, run the smallest useful tests.
+
+    @forge-bundle tutorial-core-edit-smoke-shape
+    RUN_FILE forge/entry.py
+
+    HELP LIST_FILES
+
+    LIST_OPS core
+
+    DOCS
+    SUGGEST: run-packet, safe-patch
+    @end-forge-bundle
+
+## EXPECT
+The exact smoke test depends on the file changed.
+
+For parser/op registry changes, use:
+- REFRESH
+- LIST_OPS
+- HELP affected op
+- one real small bundle
+
+For LinkOS changes, use:
+- RUN_FILE changed file
+- LINKOS ARGS: home
+- LINKOS ARGS: docs
+
+For Shortcut changes, test through the real Shortcut loop.
+
+## STEP 6 — IF IT BREAKS
+Do not keep patching blindly.
+
+Use:
+- latest packet
+- traceback
+- DIFF
+- BRANCH restore
+- REVERT_RUN
+- emergency_revert.py if Forge cannot run
+
+Good recovery bundle:
+
+    @forge-bundle tutorial-core-edit-recovery-check
+    LIST_RUNS
+
+    BRANCH list
+
+    DOCS
+    OPEN: tutorial-recovery
+    SUGGEST: tutorial-failure-reading, safe-patch
+    @end-forge-bundle
+
+## PUBLIC RELEASE RULE
+For public/minimal Forge, core docs should describe only the released system.
+
+Do not include private tools, unreleased workflows, personal project assumptions, or docs that only apply to a local development machine.
+
+Public docs should focus on:
+- bundle loop
+- run packets
+- core ops
+- LinkOS
+- docs and tutorials
+- recovery
+- custom ops if included
+- Pythonista constraints
+
+## COMMON MISTAKES
+- Touching core without a branch.
+- Trusting memory over PREVIEW.
+- Making too many changes in one bundle.
+- Not running a smoke test.
+- Ignoring FAILED_PARSE.
+- Treating LinkOS rendering as proof the core loop works.
+- Letting public docs reference unreleased or machine-specific tools.
+
+## WHAT YOU LEARNED
+Core editing is not forbidden. It just needs stronger discipline:
+
+    branch first
+    inspect exactly
+    patch small
+    test immediately
+    recover from packets
+
+## RELATED
+- core-edit — core workflow guide
+- safe-patch — branch and recovery pattern
+- tutorial-recovery — undo tools
+- tutorial-failure-reading — bad packet reading
+- run-packet — packet truth
