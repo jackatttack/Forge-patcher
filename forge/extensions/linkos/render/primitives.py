@@ -24,6 +24,11 @@ also runs cleanly when imported outside Pythonista (e.g. for testing).
 import os
 
 try:
+    from forge.runtime.paths import project_root as _project_root
+except Exception:
+    _project_root = None
+
+try:
     import console
 except Exception:
     console = None
@@ -35,11 +40,39 @@ except Exception:
 
 
 # -- launcher script --------------------------------------------------------
-#
-# Name of the root-level Python file Pythonista invokes for LinkOS URLs.
-# Every tappable LinkOS link points back at this script with an ``argv``
-# query string. If the launcher is renamed, change this constant.
-SCRIPT = 'linkos.py'
+
+def _active_project_root():
+    """Return the active Forge project root."""
+    if _project_root is not None:
+        try:
+            return os.path.abspath(_project_root())
+        except Exception:
+            pass
+    return os.path.abspath(os.path.expanduser('~/Documents'))
+
+
+def _pythonista_script_path(filename):
+    """Return a Pythonista URL path for a script in the active project root.
+
+    Pythonista URL links are resolved relative to Documents. In contained
+    mode this may be ``some/folder/linkos.py``. In root-launcher mode this
+    becomes simply ``linkos.py``.
+    """
+    root = _active_project_root()
+    script = os.path.abspath(os.path.join(root, filename))
+    documents = os.path.abspath(os.path.expanduser('~/Documents'))
+
+    try:
+        rel = os.path.relpath(script, documents)
+        if not rel.startswith('..') and not os.path.isabs(rel):
+            return rel.replace('\\', '/')
+    except Exception:
+        pass
+
+    return filename
+
+
+SCRIPT = _pythonista_script_path('linkos.py')
 
 
 # -- palette ----------------------------------------------------------------
@@ -110,12 +143,7 @@ def q(text):
 
 
 def url(*args):
-    """Build a Pythonista launch URL for the LinkOS dispatcher.
-
-    Positional ``args`` are joined into a single ``argv`` string. Empty
-    args are dropped. Returns a URL of the form
-    ``pythonista3://linkos.py?action=run&argv=<route>``.
-    """
+    """Build a Pythonista launch URL for this minimal LinkOS dispatcher."""
     arg_text = ' '.join(str(a) for a in args if str(a) != '')
     if arg_text:
         return 'pythonista3://%s?action=run&argv=%s' % (SCRIPT, q(arg_text))
