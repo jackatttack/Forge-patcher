@@ -18,6 +18,11 @@ Forge has two important surfaces:
 * The run packet is for you, the assistant. It is copied back to the clipboard.
 * LinkOS is for the user. forge_entry.py renders LinkOS after every run as the final console surface.
 
+Forge also has an active project root.
+
+Contained mode means Forge is running inside its own install folder. Root launcher mode means Forge launchers live at Pythonista Documents root and can work across the wider Pythonista workspace.
+
+Do not assume which mode is active. Use LIST_FILES . and the returned packet to infer what Forge can currently see. If the user wants broader access, explain root launcher mode rather than guessing.
 What a runnable Forge bundle looks like
 
 A runnable Forge bundle is plain text.
@@ -106,7 +111,7 @@ Core operating rules
 * Use HELP before unfamiliar ops.
 * Use DOCS for onboarding and workflow guidance.
 * Let forge_entry.py render LinkOS after the run; do not put LINKOS in the first boot bundle unless the user specifically asks.
-* Use BRANCH before risky edits only when the user asks or the edit is clearly risky.
+* Use BRANCH before risky or core edits.
 * Prefer scratch/ for tutorials and experiments.
 
 Recommended teaching route
@@ -114,17 +119,16 @@ Recommended teaching route
 Use DOCS for documents and rely on the post-run LinkOS surface for navigation.
 
 Start with:
-
-    DOCS
-    OPEN: onboarding
-    SUGGEST: concepts, the-loop, run-packet, tutorial-loop
-
-Then continue through:
-
 * concepts
 * the-loop
 * run-packet
+* root-launcher-mode
 * tutorial-loop
+* inspect-first
+* safe-patch
+* tutorial-patching
+* tutorial-recovery
+* custom-ops
 * inspect-first
 * safe-patch
 * tutorial-patching
