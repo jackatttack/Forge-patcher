@@ -253,11 +253,11 @@ def normalise_bundle(text):
     def flush_pending_range():
         nonlocal pending_start, pending_end, pending_lines, pending_has_lines
 
-        if current_op == 'REPLACE_FILE_RANGE':
+        if current_op in ('REPLACE_FILE_RANGE', 'PREVIEW'):
             if pending_start and pending_end and not pending_has_lines:
                 indent = pending_start[0]
                 out.append(indent + 'LINES: ' + pending_start[1] + '-' + pending_end[1])
-                add_note('REPLACE_FILE_RANGE START/END -> LINES')
+                add_note(current_op + ' START/END -> LINES')
             else:
                 for raw_line in pending_lines:
                     out.append(raw_line)
@@ -293,7 +293,7 @@ def normalise_bundle(text):
             out.append(raw)
             continue
 
-        if not in_body and current_op == 'REPLACE_FILE_RANGE':
+        if not in_body and current_op in ('REPLACE_FILE_RANGE', 'PREVIEW'):
             key, value = _range_directive(stripped)
             if key in ('START', 'END', 'LINES'):
                 if key == 'START':
