@@ -1,0 +1,176 @@
+# tutorial-patching
+
+## SUMMARY
+Learn the safe Forge patching loop: create a branch, inspect the file, patch it, verify it, and understand how recovery works.
+
+## WHEN TO USE
+Use this after [[tutorial-search]] when you are ready to make a small controlled edit.
+
+## GOAL
+Learn the safe patch pattern:
+
+1. Create a branch.
+2. Preview the file.
+3. Patch the file.
+4. Run or preview to verify.
+5. Use the packet as truth.
+6. Know how to recover.
+
+This tutorial only touches:
+
+    scratch/forge_tutorial/
+
+## WHY BRANCH FIRST
+A branch is a named checkpoint of important files.
+
+Before risky edits, branch the files you care about. If the patch goes wrong, you can restore the branch.
+
+## STEP 1 — SET UP A SCRATCH FILE
+Create a tiny Python file to patch.
+
+    @forge-bundle tutorial-patching-setup
+    CREATE_FILE scratch/forge_tutorial/patch_me.py
+    BEGIN_BODY
+    def greeting(name):
+        return "Hello, " + name
+
+    print(greeting("Forge"))
+    END_BODY
+
+    RUN_FILE scratch/forge_tutorial/patch_me.py
+    @end-forge-bundle
+
+## EXPECT
+The packet should show:
+- CREATE_FILE applied
+- RUN_FILE exit 0
+- output: Hello, Forge
+
+## STEP 2 — BRANCH BEFORE PATCHING
+Create a checkpoint before editing.
+
+    @forge-bundle tutorial-patching-branch
+    BRANCH create before_tutorial_patch
+    BEGIN_BODY
+    scratch/forge_tutorial/patch_me.py
+    END_BODY
+    @end-forge-bundle
+
+## EXPECT
+The packet should show a branch was created.
+
+The branch includes a standalone restore script, so it is a real recovery point.
+
+## STEP 3 — INSPECT THE FILE
+Preview before changing anything.
+
+    @forge-bundle tutorial-patching-preview
+    PREVIEW scratch/forge_tutorial/patch_me.py
+    LINES: 1-20
+    @end-forge-bundle
+
+## EXPECT
+The packet should show numbered lines for the file.
+
+You should see the greeting function and the print call.
+
+## STEP 4 — PATCH THE FILE
+Replace the full small file with a clearer version.
+
+    @forge-bundle tutorial-patching-replace
+    REPLACE_FILE scratch/forge_tutorial/patch_me.py
+    BEGIN_BODY
+    def greeting(name):
+        return "Hello from Forge, " + name
+
+    print(greeting("learner"))
+    END_BODY
+    @end-forge-bundle
+
+## EXPECT
+The packet should show:
+
+    APPLIED | REPLACE_FILE | scratch/forge_tutorial/patch_me.py
+
+The file changed, but the packet is not enough by itself. Verify the behaviour next.
+
+## STEP 5 — VERIFY THE PATCH
+Run the file again.
+
+    @forge-bundle tutorial-patching-verify
+    RUN_FILE scratch/forge_tutorial/patch_me.py
+    @end-forge-bundle
+
+## EXPECT
+The packet should show:
+
+    exit 0
+    Hello from Forge, learner
+
+If it does, the patch worked.
+
+## STEP 6 — SEE RECOVERY OPTIONS
+List recent runs and inspect the branch.
+
+    @forge-bundle tutorial-patching-recovery-info
+    LIST_RUNS
+
+    BRANCH list
+
+    DOCS
+    SUGGEST: safe-patch, run-packet
+    @end-forge-bundle
+
+## EXPECT
+The packet should show recent runs and saved branches.
+
+You do not need to restore anything unless something went wrong.
+
+## OPTIONAL — RESTORE THE BRANCH
+Only run this if you want to undo the tutorial patch.
+
+    @forge-bundle tutorial-patching-restore
+    BRANCH restore before_tutorial_patch
+
+    RUN_FILE scratch/forge_tutorial/patch_me.py
+    @end-forge-bundle
+
+## EXPECT
+The file should return to the branch version.
+
+The output should go back to:
+
+    Hello, Forge
+
+## CLEAN UP
+When finished, delete the scratch file.
+
+    @forge-bundle tutorial-patching-cleanup
+    DELETE_FILE scratch/forge_tutorial/patch_me.py
+    @end-forge-bundle
+
+## WHAT YOU LEARNED
+You learned the safe patching shape:
+
+    branch before risk
+    inspect before edit
+    patch small
+    verify with RUN_FILE or PREVIEW
+    recover using branch or run history
+
+## COMMON MISTAKES
+- Editing before previewing.
+- Skipping the branch before a risky patch.
+- Treating APPLIED as proof the program works.
+- Forgetting to run or preview after patching.
+- Restoring a branch without checking what it contains.
+
+## NEXT
+Go to [[tutorial-ops]] for a guided tour of common Forge ops.
+
+## RELATED
+- tutorial — learning hub
+- tutorial-search — inspect-first workflow
+- safe-patch — full safe patch guide
+- run-packet — reading output
+- concepts — core vocabulary
