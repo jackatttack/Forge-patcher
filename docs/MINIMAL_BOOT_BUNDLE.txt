@@ -8,12 +8,6 @@ DOCS
 OPEN: onboarding
 SUGGEST: concepts, the-loop, run-packet, tutorial-loop, inspect-first, safe-patch
 
-LINKOS
-ARGS: home
-
-LINKOS
-ARGS: docs onboarding
-
 HELP DOCS
 
 HELP LINKOS
