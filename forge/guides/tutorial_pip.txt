@@ -1,0 +1,161 @@
+# tutorial-pip
+
+## SUMMARY
+Learn how to use Forge's PIP op to install and uninstall pure-Python packages in Pythonista.
+
+## WHEN TO USE
+Use this after [[tutorial-ops]] when you want to add a Python package to your Forge/Pythonista environment.
+
+## GOAL
+Learn how to:
+
+- read PIP help
+- install a pure-Python package
+- verify the import
+- understand Pythonista package limits
+- uninstall a package safely
+
+## SAFETY
+Pythonista can usually handle pure-Python packages.
+
+Packages with compiled extensions may fail.
+
+Good candidates:
+- small pure-Python utilities
+- packages with no native C/Rust extensions
+- packages that import cleanly after install
+
+Bad candidates:
+- numpy-style compiled packages
+- packages needing system binaries
+- packages with complex native dependencies
+
+## STEP 1 — READ PIP HELP
+Start with the canonical reference.
+
+    @forge-bundle tutorial-pip-help
+    HELP PIP
+    @end-forge-bundle
+
+## EXPECT
+The packet should show:
+- ACTION is required
+- ACTION can install or uninstall
+- IMPORT can be used when package name differs from import name
+- uninstall requires CONFIRM: yes
+
+## STEP 2 — INSTALL A SMALL PACKAGE
+This installs chardet, a small pure-Python package.
+
+    @forge-bundle tutorial-pip-install
+    PIP chardet
+    ACTION: install
+    @end-forge-bundle
+
+## EXPECT
+The packet should show either:
+
+    APPLIED
+
+or:
+
+    SKIPPED_ALREADY_PRESENT
+
+Both are fine.
+
+Forge verifies installation by importing the package.
+
+## STEP 3 — VERIFY WITH RUN_FILE
+Create and run a tiny import test.
+
+    @forge-bundle tutorial-pip-verify
+    CREATE_FILE scratch/forge_tutorial/test_chardet.py
+    BEGIN_BODY
+    import chardet
+
+    print("chardet import ok")
+    print(getattr(chardet, "__version__", "unknown"))
+    END_BODY
+
+    RUN_FILE scratch/forge_tutorial/test_chardet.py
+    @end-forge-bundle
+
+## EXPECT
+The packet should show:
+
+    exit 0
+    chardet import ok
+
+If RUN_FILE fails with ModuleNotFoundError, the install did not succeed or the import name is different.
+
+## PACKAGE NAME VS IMPORT NAME
+Sometimes the PyPI name and import name differ.
+
+Example:
+
+    PIP beautifulsoup4
+    ACTION: install
+    IMPORT: bs4
+
+Use IMPORT when the package imports under a different name.
+
+## STEP 4 — CLEAN UP TEST FILE
+Remove the scratch import test.
+
+    @forge-bundle tutorial-pip-clean-test
+    DELETE_FILE scratch/forge_tutorial/test_chardet.py
+    @end-forge-bundle
+
+## EXPECT
+The packet should show:
+
+    APPLIED | DELETE_FILE | scratch/forge_tutorial/test_chardet.py
+
+## OPTIONAL — UNINSTALL
+Only run this if you want to remove chardet.
+
+    @forge-bundle tutorial-pip-uninstall
+    PIP chardet
+    ACTION: uninstall
+    CONFIRM: yes
+    @end-forge-bundle
+
+## EXPECT
+The packet should show the package was uninstalled.
+
+Uninstall requires CONFIRM: yes.
+
+## COMMON FAILURES
+- Missing ACTION directive.
+- Package not found on PyPI.
+- Network unavailable.
+- Package requires compiled extensions.
+- Import name differs from package name.
+- Uninstall attempted without CONFIRM: yes.
+
+## GOOD PIP WORKFLOW
+Use this shape:
+
+    HELP PIP
+    PIP package
+    ACTION: install
+    RUN_FILE an import test
+
+Do not assume installation worked until the import test passes.
+
+## WHAT YOU LEARNED
+You learned how to install, verify, and optionally uninstall a package through Forge.
+
+The important rule is:
+
+    install is not done until import works
+
+## NEXT
+Go to [[tutorial-extension]] or [[tutorial-custom-op]] if you want to use installed packages in new Forge tools.
+
+## RELATED
+- HELP PIP — canonical PIP reference
+- tutorial-ops — op family map
+- tutorial-extension — extending Forge safely
+- tutorial-custom-op — create a custom op
+- tutorial-recovery — cleanup and recovery
