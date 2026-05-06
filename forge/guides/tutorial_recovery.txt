@@ -1,0 +1,171 @@
+# tutorial-recovery
+
+## SUMMARY
+Learn how to recover from bad Forge runs using branches, run history, diffs, and revert tools.
+
+## WHEN TO USE
+Use this after [[tutorial-patching]], or any time a run failed, skipped, touched the wrong file, or made a change you want to undo.
+
+## GOAL
+Learn the recovery tools:
+
+- LIST_RUNS
+- DIFF
+- REVERT_RUN
+- BRANCH list
+- BRANCH restore
+- emergency_revert.py
+
+## CORE IDEA
+Forge recovery is based on two facts:
+
+1. Every run has a packet.
+2. Mutating runs keep snapshots so files can be restored.
+
+The packet tells you what happened. Recovery tools let you inspect or undo it.
+
+## STEP 1 — LIST RECENT RUNS
+Start by finding recent run IDs.
+
+    @forge-bundle tutorial-recovery-list-runs
+    LIST_RUNS
+    @end-forge-bundle
+
+## EXPECT
+The packet should show recent run stamps.
+
+A run stamp looks like:
+
+    20260506_120937
+
+Use that stamp with DIFF or REVERT_RUN.
+
+## STEP 2 — INSPECT A RUN DIFF
+DIFF compares a run's saved snapshots with current disk state.
+
+Replace the example stamp with a real one from LIST_RUNS.
+
+    @forge-bundle tutorial-recovery-diff-latest
+    DIFF latest
+    @end-forge-bundle
+
+## EXPECT
+The packet should show what changed, or say there is no relevant diff.
+
+Use DIFF before reverting if you are unsure what a run touched.
+
+## STEP 3 — LIST BRANCHES
+Branches are named checkpoints.
+
+    @forge-bundle tutorial-recovery-branches
+    BRANCH list
+    @end-forge-bundle
+
+## EXPECT
+The packet should list saved branches.
+
+Branches are useful before risky edits, especially core Forge edits.
+
+## STEP 4 — CREATE A SAFE TEST BRANCH
+This creates a branch for a harmless scratch file path.
+
+    @forge-bundle tutorial-recovery-create-branch
+    CREATE_FILE scratch/forge_tutorial/recovery_demo.txt
+    BEGIN_BODY
+    original text
+    END_BODY
+
+    BRANCH create before_recovery_demo
+    BEGIN_BODY
+    scratch/forge_tutorial/recovery_demo.txt
+    END_BODY
+    @end-forge-bundle
+
+## EXPECT
+The packet should show:
+- CREATE_FILE applied
+- BRANCH created
+
+Now there is a checkpoint.
+
+## STEP 5 — CHANGE THE FILE
+Make a small change so recovery has something to restore.
+
+    @forge-bundle tutorial-recovery-change-file
+    REPLACE_FILE scratch/forge_tutorial/recovery_demo.txt
+    BEGIN_BODY
+    changed text
+    END_BODY
+
+    PREVIEW scratch/forge_tutorial/recovery_demo.txt
+    LINES: 1-10
+    @end-forge-bundle
+
+## EXPECT
+The preview should show:
+
+    changed text
+
+## STEP 6 — RESTORE THE BRANCH
+Restore the saved checkpoint.
+
+    @forge-bundle tutorial-recovery-restore-branch
+    BRANCH restore before_recovery_demo
+
+    PREVIEW scratch/forge_tutorial/recovery_demo.txt
+    LINES: 1-10
+    @end-forge-bundle
+
+## EXPECT
+The preview should show:
+
+    original text
+
+That proves branch restore works.
+
+## STEP 7 — CLEAN UP
+Remove the scratch recovery demo file.
+
+    @forge-bundle tutorial-recovery-cleanup
+    DELETE_FILE scratch/forge_tutorial/recovery_demo.txt
+    @end-forge-bundle
+
+## EXPECT
+The packet should show the file was deleted.
+
+## REVERT_RUN
+Use REVERT_RUN when you want to undo a whole previous run from snapshots.
+
+Typical pattern:
+
+    LIST_RUNS
+    DIFF <run-stamp>
+    REVERT_RUN <run-stamp>
+
+Do not revert blindly. Inspect first.
+
+## EMERGENCY RECOVERY
+If Forge itself is broken and normal ops cannot run, use:
+
+    forge/emergency_revert.py
+
+Open it directly in Pythonista. It is designed to recover even when Forge runtime is damaged.
+
+## COMMON RECOVERY RULES
+- Read the packet before doing anything.
+- Do not assume APPLIED means the program works.
+- SKIPPED is not success.
+- Use DIFF before REVERT_RUN when unsure.
+- Use BRANCH before risky patches.
+- For core files, branch first every time.
+- Keep recovery bundles small.
+
+## NEXT
+Go to [[tutorial-failure-reading]] to learn how to interpret failed packets.
+
+## RELATED
+- tutorial — learning hub
+- tutorial-patching — safe patch loop
+- tutorial-failure-reading — understanding bad packets
+- safe-patch — safe edits and recovery
+- run-packet — reading Forge output
