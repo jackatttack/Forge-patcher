@@ -1,0 +1,165 @@
+# tutorial-url
+
+## SUMMARY
+Learn how to use Forge's URL op to probe pages, fetch content, download files, parse JSON, and make simple API requests.
+
+## WHEN TO USE
+Use this after [[tutorial-ops]] when you want Forge to interact with web pages, APIs, or downloadable files.
+
+## GOAL
+Learn URL basics:
+
+- probe a URL safely
+- fetch page content
+- strip page text for LLM readability
+- parse JSON
+- download a file
+- understand when POST/PUT/PATCH/DELETE are risky
+
+## SAFETY
+Start with probe mode.
+
+Probe checks headers, redirects, status, and availability without treating the page as content.
+
+Avoid write methods like POST, PUT, PATCH, or DELETE until you understand the endpoint.
+
+## STEP 1 — READ URL HELP
+Start with the canonical reference.
+
+    @forge-bundle tutorial-url-help
+    HELP URL
+    @end-forge-bundle
+
+## EXPECT
+The packet should show:
+- allowed directives
+- modes
+- common failures
+- examples
+
+## STEP 2 — PROBE A PAGE
+Probe is the safest first request.
+
+    @forge-bundle tutorial-url-probe
+    URL https://example.com
+    MODE: probe
+    @end-forge-bundle
+
+## EXPECT
+The packet should show status, content type, URL, size, or redirect information.
+
+Use probe before fetch when you are unsure what a URL returns.
+
+## STEP 3 — FETCH A PAGE
+Fetch reads the page content.
+
+    @forge-bundle tutorial-url-fetch
+    URL https://example.com
+    MODE: fetch
+    @end-forge-bundle
+
+## EXPECT
+The packet should show fetched output.
+
+For real pages, this may be noisy.
+
+## STEP 4 — STRIP FOR READABILITY
+Use STRIP: markdown when you want cleaner text for an LLM or saved note.
+
+    @forge-bundle tutorial-url-strip
+    URL https://example.com
+    MODE: fetch
+    STRIP: markdown
+    @end-forge-bundle
+
+## EXPECT
+The packet should show cleaner page text if stripping is supported for that content.
+
+## STEP 5 — READ JSON
+Use json mode for APIs.
+
+    @forge-bundle tutorial-url-json
+    URL https://api.github.com/repos/python/cpython
+    MODE: json
+    JPATH: stargazers_count
+    @end-forge-bundle
+
+## EXPECT
+The packet should show the extracted JSON value.
+
+JPATH supports dot paths and indexes, for example:
+
+    results.0.title
+
+## STEP 6 — DOWNLOAD A FILE
+Download mode needs DEST.
+
+    @forge-bundle tutorial-url-download-example
+    URL https://example.com
+    MODE: download
+    DEST: scratch/forge_tutorial/example_download.html
+    @end-forge-bundle
+
+## EXPECT
+The packet should show a downloaded destination path.
+
+DEST is relative to the project root.
+
+## STEP 7 — CLEAN UP DOWNLOAD
+Remove the downloaded example file if you ran Step 6.
+
+    @forge-bundle tutorial-url-cleanup
+    DELETE_FILE scratch/forge_tutorial/example_download.html
+    @end-forge-bundle
+
+## POST AND API WRITES
+URL can send write methods:
+
+    METHOD: POST
+    BODY_DATA: {"name": "test"}
+    HEADERS: Authorization=Bearer token
+
+Treat this as advanced.
+
+Do not send write requests unless:
+- you trust the endpoint
+- you understand the body
+- you understand authentication
+- you are comfortable with the side effect
+
+## COMMON FAILURES
+- URL missing https:// or http://
+- network unavailable
+- timeout
+- DEST missing for download mode
+- JSON path not found
+- content type does not match what you expected
+- API rejects BODY_DATA or CONTENT_TYPE
+- auth header missing or wrong
+
+## GOOD URL WORKFLOW
+Use this shape:
+
+    probe first
+    fetch or json second
+    download only when needed
+    write methods only with care
+
+## WHAT YOU LEARNED
+You learned how to use URL as Forge's HTTP client.
+
+URL can:
+- inspect a web resource
+- fetch readable content
+- parse API JSON
+- download files into the project
+- make API requests when appropriate
+
+## NEXT
+Go to [[tutorial-pip]] to learn package installation.
+
+## RELATED
+- HELP URL — canonical URL reference
+- tutorial-ops — op family map
+- tutorial-recovery — cleanup and recovery
+- run-packet — reading output
