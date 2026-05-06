@@ -1,0 +1,193 @@
+# tutorial-extension
+
+## SUMMARY
+Learn the safe workflow for extending Forge: choose the right extension point, add HELP, test with small bundles, refresh, and document the new behaviour.
+
+## WHEN TO USE
+Use this after [[tutorial-custom-op]] when you want to add a real feature, op, doc surface, renderer, or workflow to Forge.
+
+## GOAL
+Learn how Forge should grow.
+
+Good extensions are:
+- small
+- discoverable
+- documented
+- tested through run packets
+- recoverable
+- useful more than once
+
+## EXTENSION POINTS
+Forge can be extended in several ways:
+
+- docs — add or improve living docs
+- custom ops — add new bundle commands
+- LinkOS pages — add human-facing surfaces
+- actions — add side-effect handlers
+- renderers — improve how packets/docs display
+- aliases — create shortcuts for repeated bundle patterns
+
+Choose the smallest extension point that solves the problem.
+
+## STEP 1 — INSPECT THE CURRENT SURFACE
+Start by reading the existing shape.
+
+    @forge-bundle tutorial-extension-inspect
+    LIST_FILES forge/extensions/linkos
+    DEPTH: 2
+    FILES: no
+
+    LIST_FILES forge/ops/custom
+    DEPTH: 1
+    FILES: yes
+
+    DOCS
+    SUGGEST: tutorial-custom-op, docs-authoring, forge-health
+    @end-forge-bundle
+
+## EXPECT
+The packet should show:
+- LinkOS extension folders
+- custom op files
+- suggested extension docs
+
+Use this to avoid creating features in the wrong place.
+
+## STEP 2 — READ THE RIGHT HELP
+Before extending, read reference material.
+
+    @forge-bundle tutorial-extension-help
+    HELP GUIDE
+
+    HELP DOCS
+
+    HELP CREATE_FILE
+
+    HELP RUN_FILE
+
+    HELP REFRESH
+    @end-forge-bundle
+
+## EXPECT
+The packet should show exact syntax and safe usage.
+
+This prevents avoidable FAILED_PARSE errors.
+
+## STEP 3 — USE THE CUSTOM OP PATH
+If you need a new bundle command, start with [[tutorial-custom-op]].
+
+Custom ops should include:
+- SPEC
+- HELP
+- HINTS when useful
+- validate
+- execute
+- smoke test
+- docs update if behaviour matters
+
+Do not put personal one-off hacks into core Forge.
+
+## STEP 4 — USE THE DOCS PATH
+If you need to teach a workflow, create or update a doc.
+
+    @forge-bundle tutorial-extension-docs
+    DOCS
+    OPEN: tutorial-docs-authoring
+    SUGGEST: docs-authoring, tutorial, tutorial-custom-op
+    @end-forge-bundle
+
+## EXPECT
+The packet should open the docs-authoring tutorial.
+
+Use docs when the main problem is teaching, onboarding, or repeatable workflow knowledge.
+
+## STEP 5 — USE THE LINKOS PATH
+If a CLI or op is powerful but awkward to use, it may deserve a LinkOS surface.
+
+Good candidates:
+- repeated workflows
+- visual navigation
+- run packet actions
+- file browsing
+- safety/recovery flows
+- docs and tutorials
+
+Bad candidates:
+- one-off scripts
+- rarely used experiments
+- unclear workflows
+
+## STEP 6 — RUN HEALTH CHECKS
+Use audit tools after changing Forge behaviour.
+
+    @forge-bundle tutorial-extension-health
+    FORGE_AUDIT
+
+    COMPAT_AUDIT
+    LIMIT: 100
+
+    DOCS
+    SUGGEST: forge-health, compat-learning, system-health
+    @end-forge-bundle
+
+## EXPECT
+The packet should show health signals.
+
+Use:
+- FORGE_AUDIT for static/help/doc health
+- COMPAT_AUDIT for real failure patterns
+
+## SAFE EXTENSION LOOP
+Use this loop for real extension work:
+
+1. Inspect existing files.
+2. Branch before risky edits.
+3. Patch small.
+4. RUN_FILE affected Python files.
+5. REFRESH if op registry changed.
+6. Test through a real bundle.
+7. Update HELP or docs.
+8. Journal the milestone if it matters.
+
+## BRANCH BEFORE RISK
+For important files, branch first.
+
+    @forge-bundle tutorial-extension-branch-example
+    BRANCH create before_extension_change
+    BEGIN_BODY
+    forge/ops/custom/example.py
+    forge/extensions/linkos/pages/example.py
+    END_BODY
+    @end-forge-bundle
+
+Do not run that exact bundle unless those files exist. It is an example shape.
+
+## WHERE THINGS BELONG
+Use this rule:
+
+- Exact command syntax belongs in HELP.
+- Repeatable workflow belongs in GUIDE/docs.
+- Human navigation belongs in LinkOS pages.
+- Side effects belong in actions.
+- Reusable visual language belongs in renderers.
+- One-off project notes belong in JOURNAL.
+
+## COMMON MISTAKES
+- Building a UI before the workflow is clear.
+- Adding docs but not HELP.
+- Adding HELP but no example.
+- Adding a new op and forgetting REFRESH.
+- Touching core files without a branch.
+- Creating huge docs instead of linked short docs.
+- Testing by vibes instead of run packets.
+
+## NEXT
+Go to [[tutorial-url]] to learn Forge's URL op, or [[tutorial-pip]] to learn package installation.
+
+## RELATED
+- tutorial-custom-op — create a tiny op
+- tutorial-docs-authoring — write living docs
+- forge-health — audit Forge health
+- compat-learning — learn from failures
+- custom-ops — extension philosophy
+- add-custom-op — when a workflow deserves an op
