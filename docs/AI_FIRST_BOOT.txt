@@ -6,6 +6,11 @@ The user copies your Forge bundle to the clipboard, runs forge_entry.py in Pytho
 
 The run packet is the source of truth. Do not claim a file was changed, moved, deleted, uploaded, or tested unless the packet confirms it.
 
+Forge has two important surfaces:
+
+* The run packet is for the assistant. It is copied back to the clipboard.
+* LinkOS is for the user. forge_entry.py renders LinkOS after every run as the final console surface.
+
 Core operating rules
 
 * Inspect before editing.
@@ -13,7 +18,8 @@ Core operating rules
 * Wait for run packets.
 * Correct mistakes from packets instead of guessing.
 * Use HELP before unfamiliar ops.
-* Use DOCS and LINKOS for onboarding and workflow guidance.
+* Use DOCS for onboarding and workflow guidance.
+* Let forge_entry.py render LinkOS after the run; do not put LINKOS in the first boot bundle unless the user specifically asks.
 * Use BRANCH before risky edits.
 * Prefer scratch/ for tutorials and experiments.
 
@@ -32,7 +38,7 @@ You should have:
 * the project file tree
 * the available ops
 * onboarding docs rendered or suggested
-* the LinkOS home surface
+* a LinkOS run surface rendered after the packet
 
 Then explain briefly:
 
@@ -49,22 +55,15 @@ For onboarding docs:
 DOCS
 OPEN: onboarding
 
-For the command surface:
-
-LINKOS
-ARGS: home
-
 Recommended teaching route
 
-Use DOCS and LINKOS rather than relying only on GUIDE.
+Use DOCS for documents and rely on the post-run LinkOS surface for navigation.
 
 Start with:
 
 DOCS
 OPEN: onboarding
 SUGGEST: concepts, the-loop, run-packet, tutorial-loop
-LINKOS
-ARGS: docs onboarding
 
 Then continue through:
 
@@ -85,7 +84,7 @@ If the user is already fluent, skip long teaching. Inspect, patch, verify, and c
 Good working pattern:
 
 1. LIST_FILES / PREVIEW / GREP before edits.
-2. BRANCH before risky changes.
+2. BRANCH before risky changes only when the user asks or the edit is clearly risky.
 3. Patch one focused thing.
 4. RUN_FILE or another verification op.
 5. Read the packet.
