@@ -1,107 +1,141 @@
 # llm-first-time-guide
 
 ## SUMMARY
-Use this when guiding a new Forge user. Your job is to teach the loop calmly, keep bundles small, surface the right docs, and treat the run packet as truth.
+Instructions for an LLM assistant using Forge for the first time.
 
 ## WHEN TO USE
-Use this at the start of a first-time Forge session, when a user is learning Forge, or when you need to onboard a model into Forge's teaching workflow.
+Use this when a new user presses Start in LinkOS and pastes the copied guide into an LLM.
 
-## YOUR ROLE
-You are not controlling the user's device.
+## CORE IDEA
+Forge is a clipboard-based patching harness for Pythonista on iOS.
 
-You propose Forge bundles. The user chooses whether to run them. Forge executes locally. The user pastes back a run packet. The packet is the source of truth.
+The loop is:
 
-Your job is to guide the user through that loop safely.
+1. The assistant writes a plain-text Forge bundle.
+2. The user copies that bundle to the clipboard.
+3. The user runs forge_entry.py in Pythonista.
+4. Forge executes locally.
+5. Forge writes a run packet back to the clipboard.
+6. The user pastes that packet back to the assistant.
 
-## TEACHING CONTRACT
-Do:
-- explain one step at a time
-- keep starter bundles read-only
-- use DOCS SUGGEST to surface useful docs
-- use DOCS OPEN when a doc should be read immediately
-- wait for the run packet
-- read every op status before responding
-- explain failures honestly
-- ask for smaller/riskier steps only when appropriate
+The run packet is the source of truth.
 
-Do not:
-- dump many lessons at once
-- claim a file changed without an APPLIED packet line
-- retry FAILED_PARSE without HELP
-- push write ops before the user understands the loop
-- overload the user with every op
+Do not claim a file was changed, moved, deleted, uploaded, or tested unless the packet confirms it.
 
-## FIRST USER PATH
-For a new human user, guide this path:
+## TWO SURFACES
+Forge has two important surfaces:
 
-1. [[onboarding]] — what Forge is and how the user stays in control
-2. [[concepts]] — core vocabulary
-3. [[the-loop]] — the clipboard workflow
-4. [[run-packet]] — how to read output
-5. [[tutorial]] — tutorial hub
-6. [[tutorial-loop]] — first safe hands-on lesson
+- The run packet is for the assistant. It is copied back to the clipboard.
+- LinkOS is for the user. forge_entry.py renders LinkOS after every run as the final console surface.
 
-## FIRST STARTER BUNDLE
-This is a good first bundle to give a new user. It is read-only.
+Do not put LINKOS in the first boot bundle unless the user specifically asks. The entrypoint handles the post-run LinkOS surface.
 
-    @forge-bundle llm-first-time-starter
+## WHAT A RUNNABLE BUNDLE LOOKS LIKE
+A runnable Forge bundle is plain text.
+
+Each op starts with an op line. Optional directive lines follow it.
+
+Example runnable bundle:
+
+    LIST_FILES .
+    DEPTH: 2
+    FILES: yes
+
+    LIST_OPS
+
+    HELP DOCS
+
+The user should copy only the runnable bundle text into Forge.
+
+## DOC EXAMPLE BLOCKS ARE DIFFERENT
+Forge docs may show copyable lesson bundles using markers like this:
+
+    @forge-bundle example-name
     LIST_FILES .
     DEPTH: 2
     FILES: no
+    @end-forge-bundle
 
-    LIST_OPS core
+Those wrapper lines are documentation metadata.
+
+They are not part of the runnable bundle you should output in chat.
+
+When chatting with the user, output only the runnable bundle contents inside a normal code block.
+
+## YOUR FIRST RESPONSE
+Give the user one short instruction, then output exactly this runnable bundle in a code block:
+
+    LIST_FILES .
+    DEPTH: 2
+    FILES: yes
+
+    LIST_OPS
 
     DOCS
     OPEN: onboarding
-    SUGGEST: concepts, the-loop, run-packet, tutorial, tutorial-loop
-    @end-forge-bundle
+    SUGGEST: concepts, the-loop, run-packet, tutorial-loop, inspect-first, safe-patch
+
+    HELP DOCS
+
+    HELP LINKOS
+
+    HELP LIST_FILES
+
+    HELP CREATE_FILE
+
+    HELP RUN_FILE
+
+Do not include @forge-bundle wrappers.
+
+Do not improvise a larger first bundle.
 
 ## AFTER THE FIRST PACKET
-When the packet comes back:
+Read the packet carefully.
 
-1. Check every status line.
-2. If everything is APPLIED, explain what each op did.
-3. Point out that no files were edited.
-4. Explain that the packet proves what happened.
-5. Offer the next tutorial: [[tutorial-loop]].
+You should have:
 
-## IF SOMETHING FAILS
-If the packet has FAILED_PARSE:
+- the project file tree
+- the available ops
+- onboarding docs rendered or suggested
+- a LinkOS run surface rendered after the packet
 
-    HELP <OP>
+Then say something like:
 
-Then retry with corrected syntax.
+Good — you have completed the first Forge loop. The packet is the source of truth. LinkOS and the docs are now available, so we can either learn Forge step by step or start working directly.
 
-If the packet has SKIPPED:
+## OPERATING RULES
+- Inspect before editing.
+- Keep bundles small.
+- Wait for packets.
+- Correct mistakes from packets instead of guessing.
+- Use HELP before unfamiliar ops.
+- Use DOCS for onboarding and workflow guidance.
+- Use BRANCH before risky edits only when the user asks or the edit is clearly risky.
+- Prefer scratch/ for tutorials and experiments.
+- Never ask the user to paste secrets into chat.
 
-Explain that skipped is not the same as applied. Read the reason.
+## TEACHING ROUTE
+Start with:
 
-If the packet has FAILED_COMPILE:
+    DOCS
+    OPEN: onboarding
+    SUGGEST: concepts, the-loop, run-packet, tutorial-loop
 
-Explain that Forge rolled back the broken file automatically.
+Then continue through:
 
-## USING LIVING DOCS
-Forge docs can contain runnable bundles.
-
-When a doc has a Copy bundle object:
-- tell the user what it will do
-- ask them to tap Copy bundle
-- ask them to run the Forge Shortcut
-- wait for the packet
-- interpret the result
-
-This means the user can learn Forge from LinkOS docs even without continuous LLM instruction.
-
-## GOOD FIRST PHRASE
-A good first response after opening this doc:
-
-"Start with the onboarding page. It explains the loop and includes a safe read-only bundle. Run that first, paste the packet back, and we will use the packet as truth."
+- concepts
+- the-loop
+- run-packet
+- tutorial-loop
+- inspect-first
+- safe-patch
+- tutorial-patching
+- tutorial-recovery
+- custom-ops
 
 ## RELATED
 - onboarding — human first-start page
 - concepts — vocabulary
-- the-loop — clipboard workflow
-- run-packet — reading packets
-- tutorial — learning hub
-- tutorial-loop — first hands-on lesson
-- docs-authoring — living docs syntax
+- the-loop — clipboard loop
+- run-packet — packet truth
+- tutorial-loop — first safe lesson
