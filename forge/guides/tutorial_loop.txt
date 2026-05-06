@@ -10,31 +10,51 @@ Use this as the first hands-on Forge lesson. It is read-only and safe to run in 
 Learn the basic Forge loop:
 
 1. Copy a bundle.
-2. Run the Forge Shortcut.
+2. Run forge_entry.py.
 3. Read the packet.
 4. Use the packet as truth.
 
 This lesson does not edit files.
 
+## IMPORTANT FORMAT NOTE
+Docs can show copyable lesson bundles using @forge-bundle markers.
+
+Those markers are doc metadata. They are not part of the runnable bundle.
+
+If an assistant gives you a bundle in chat, it should give you only the runnable content inside a normal code block.
+
 ## LESSON BUNDLE
-Tap Copy bundle, run Forge, then look at the packet.
+The runnable bundle is:
+
+    LIST_FILES .
+    DEPTH: 2
+    FILES: no
+
+    LIST_OPS
+
+    DOCS
+    SUGGEST: onboarding, concepts, the-loop, run-packet
+
+In LinkOS docs, this same lesson may appear as a copyable block:
 
     @forge-bundle tutorial-loop-read-only
     LIST_FILES .
     DEPTH: 2
     FILES: no
 
-    LIST_OPS core
+    LIST_OPS
 
     DOCS
     SUGGEST: onboarding, concepts, the-loop, run-packet
     @end-forge-bundle
 
+If copying manually from chat, do not include the @forge-bundle or @end-forge-bundle lines.
+
 ## WHAT TO EXPECT
 The packet should show three APPLIED ops:
 
 - LIST_FILES — prints a project tree
-- LIST_OPS — prints available core ops
+- LIST_OPS — prints available ops
 - DOCS — surfaces useful doc links
 
 Nothing should be written to disk.
