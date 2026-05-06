@@ -1,0 +1,75 @@
+# tutorial-loop
+
+## SUMMARY
+Run your first safe Forge tutorial bundle and learn how the run packet proves what happened.
+
+## WHEN TO USE
+Use this as the first hands-on Forge lesson. It is read-only and safe to run in any project.
+
+## GOAL
+Learn the basic Forge loop:
+
+1. Copy a bundle.
+2. Run the Forge Shortcut.
+3. Read the packet.
+4. Use the packet as truth.
+
+This lesson does not edit files.
+
+## LESSON BUNDLE
+Tap Copy bundle, run Forge, then look at the packet.
+
+    @forge-bundle tutorial-loop-read-only
+    LIST_FILES .
+    DEPTH: 2
+    FILES: no
+
+    LIST_OPS core
+
+    DOCS
+    SUGGEST: onboarding, concepts, the-loop, run-packet
+    @end-forge-bundle
+
+## WHAT TO EXPECT
+The packet should show three APPLIED ops:
+
+- LIST_FILES — prints a project tree
+- LIST_OPS — prints available core ops
+- DOCS — surfaces useful doc links
+
+Nothing should be written to disk.
+
+## HOW TO READ THE PACKET
+Check the ops list first.
+
+You are looking for:
+
+    APPLIED | LIST_FILES
+    APPLIED | LIST_OPS
+    APPLIED | DOCS
+
+Then read the PREVIEW section to see the actual output.
+
+## IF IT FAILS
+If an op says FAILED_PARSE, run HELP for that op.
+
+If something else fails, copy the failure detail back to the AI or open [[run-packet]] to learn what the status means.
+
+## WHAT YOU LEARNED
+You have completed the core Forge loop:
+
+- bundle proposed
+- user ran it
+- Forge executed locally
+- packet returned
+- packet became source of truth
+
+## NEXT
+Go to [[tutorial-files]] when you are ready to create and run a harmless scratch file.
+
+## RELATED
+- tutorial — learning hub
+- onboarding — human first-start page
+- concepts — vocabulary
+- the-loop — full loop explanation
+- run-packet — reading Forge output
