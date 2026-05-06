@@ -6,17 +6,50 @@ forge.extensions.linkos.actions.run_forge
 Launch the normal minimal Forge entry loop from LinkOS.
 """
 
+import os
+
 try:
     import console as _console
 except Exception:
     _console = None
+
+try:
+    from forge.runtime.paths import project_root as _project_root
+except Exception:
+    _project_root = None
 
 from forge.extensions.linkos.render.docpage import (
     doc_actions, doc_footer, doc_hero, doc_text,
 )
 
 
-FORGE_URL = 'pythonista3://forge_entry.py?action=run'
+def _active_project_root():
+    """Return the active Forge project root."""
+    if _project_root is not None:
+        try:
+            return os.path.abspath(_project_root())
+        except Exception:
+            pass
+    return os.path.abspath(os.path.expanduser('~/Documents'))
+
+
+def _pythonista_script_path(filename):
+    """Return a Pythonista URL path for a script in the active project root."""
+    root = _active_project_root()
+    script = os.path.abspath(os.path.join(root, filename))
+    documents = os.path.abspath(os.path.expanduser('~/Documents'))
+
+    try:
+        rel = os.path.relpath(script, documents)
+        if not rel.startswith('..') and not os.path.isabs(rel):
+            return rel.replace('\\', '/')
+    except Exception:
+        pass
+
+    return filename
+
+
+FORGE_URL = 'pythonista3://%s?action=run' % _pythonista_script_path('forge_entry.py')
 
 
 def _open_url(url):
