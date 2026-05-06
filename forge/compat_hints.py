@@ -44,17 +44,17 @@ def hint_for_invalid_directive(op_name, bad_key, spec=None):
             '- Run REFRESH if HELP GREP still does not show CONTEXT.',
         ]
 
-    if key in ('START', 'END') and op == 'REPLACE_FILE_RANGE':
+    if key in ('START', 'END') and op in ('REPLACE_FILE_RANGE', 'PREVIEW'):
         return [
             'COMPAT:',
             '- START/END is clear intent. Forge normalises START + END into LINES when both are present.',
             '- If normalisation did not happen, use LINES directly.',
             'EXAMPLE:',
-            'REPLACE_FILE_RANGE path/to/file.py',
+            op + ' path/to/file.py',
             'LINES: 10-20',
-            'BEGIN_BODY',
-            'replacement',
-            'END_BODY',
+            'NEXT:',
+            '- Prefer LINES: start-end for explicit line ranges.',
+            '- Run HELP ' + op + '.',
         ]
 
     if key in ('OLD', 'NEW') and op in ('REPLACE_LINES', 'REPLACE_FILE_LINES'):
@@ -125,6 +125,54 @@ def hint_for_invalid_directive(op_name, bad_key, spec=None):
             'BEGIN_BODY',
             'content here',
             'END_BODY',
+        ]
+
+    if key == 'FILES' and op == 'BRANCH':
+        return [
+            'COMPAT:',
+            '- BRANCH does not use FILES:.',
+            '- Put the files or folders to snapshot inside BEGIN_BODY / END_BODY.',
+            'EXAMPLE:',
+            'BRANCH create before_change',
+            'BEGIN_BODY',
+            'forge/compat_hints.py',
+            'forge/compat_normalizer.py',
+            'END_BODY',
+            'NEXT:',
+            '- Move FILES: entries into the body.',
+            '- Run HELP BRANCH.',
+        ]
+
+    if key == 'SKIP_IF_EXISTS' and op == 'CREATE_FILE':
+        return [
+            'COMPAT:',
+            '- CREATE_FILE does not support SKIP_IF_EXISTS.',
+            '- CREATE_FILE is intentionally strict and fails if the file already exists.',
+            'EXAMPLE:',
+            'PREVIEW scratch/example.py',
+            '',
+            'REPLACE_FILE scratch/example.py',
+            'BEGIN_BODY',
+            'print("replacement")',
+            'END_BODY',
+            'NEXT:',
+            '- Use PREVIEW first if unsure whether the file exists.',
+            '- Use REPLACE_FILE for a deliberate overwrite.',
+            '- Run HELP CREATE_FILE.',
+        ]
+
+    if key in ('OUT', '$OUT') and op == 'URL':
+        return [
+            'COMPAT:',
+            '- URL does not use OUT: as a directive.',
+            '- $OUT is a conceptual result field in packet/context output, not bundle syntax.',
+            'EXAMPLE:',
+            'URL https://example.com',
+            'MODE: fetch',
+            'NEXT:',
+            '- Remove OUT: from the bundle.',
+            '- Read the URL result from the run packet.',
+            '- Run HELP URL.',
         ]
 
     return []
