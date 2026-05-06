@@ -1,0 +1,123 @@
+# docs-authoring
+
+## SUMMARY
+Forge docs are living action surfaces. They can explain ideas, link to other docs, and include copyable Forge bundles that teach the loop through action.
+
+## WHEN TO USE
+Use this when writing or updating docs for LinkOS, Forge onboarding, tutorials, workflows, or LLM handoff pages.
+
+## CORE IDEA
+A good Forge doc is not just something to read.
+
+It can contain:
+- prose explanation
+- inline links to related docs
+- copyable Forge bundles
+- section-level copy actions
+- whole-doc copy actions
+
+This makes docs useful for both humans and LLMs.
+
+## INLINE DOC LINKS
+Use double-bracket links when a doc mentions another doc naturally.
+
+Example:
+
+    Read [[first-run]] before trying [[safe-patch]].
+
+These render as tappable doc links in LinkOS.
+
+## COPYABLE BUNDLES
+Use Forge-native bundle blocks for runnable examples.
+
+    @forge-bundle read-only-start
+    LIST_FILES .
+    DEPTH: 2
+    FILES: no
+
+    LIST_OPS core
+    @end-forge-bundle
+
+LinkOS renders this as code and adds a Copy bundle action.
+
+## WHY NOT MARKDOWN FENCES
+Do not use triple-backtick fences for Forge bundles.
+
+They collide with:
+- ChatGPT markdown rendering
+- mobile copy/paste
+- Forge bundle bodies
+- doc editing inside bundles
+
+Use @forge-bundle instead.
+
+## BUNDLE BLOCK RULES
+Keep embedded bundles:
+- small
+- safe by default
+- labelled when possible
+- easy to explain
+- followed by what the user should expect
+
+Prefer read-only bundles early in onboarding.
+
+## GOOD PATTERN
+A strong tutorial section looks like this:
+
+1. Explain the goal.
+2. Show a copyable bundle.
+3. Explain what the packet should show.
+4. Tell the user what to do next.
+
+Example:
+
+    @forge-bundle inspect-start
+    LIST_FILES .
+    DEPTH: 2
+    FILES: no
+    @end-forge-bundle
+
+After running this, the packet should show a project tree and an APPLIED status.
+
+## COPY ACTIONS
+Doc pages can copy:
+- the whole doc
+- a section
+- an embedded Forge bundle
+
+Use whole-doc copy when handing context to an LLM.
+Use section copy when only one idea matters.
+Use bundle copy when the user should run something.
+
+## DOC STYLE
+Write docs for humans first.
+
+Good docs are:
+- direct
+- practical
+- action-shaped
+- easy to scan
+- honest about failure modes
+- linked to related docs
+- useful when pasted into an LLM chat
+
+Avoid turning docs into model-only instructions unless the doc is explicitly for LLM continuity.
+
+## ONBOARDING STANDARD
+Onboarding docs should teach the loop by action:
+
+1. Read a short explanation.
+2. Tap Copy bundle.
+3. Run Forge.
+4. Paste the packet back.
+5. Learn from the result.
+
+The product should teach the workflow through the workflow itself.
+
+## RELATED
+- onboarding — human first-start page
+- first-run — first complete Forge loop
+- docs-vs-guide — docs architecture
+- concepts — Forge vocabulary
+- tutorial — sandbox learning path
+- safe-patch — safe real edits
