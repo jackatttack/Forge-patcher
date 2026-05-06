@@ -1,0 +1,117 @@
+# docs-vs-guide
+
+## SUMMARY
+HELP, GUIDE, DOCS, and LinkOS are related but not the same. HELP is reference. GUIDE is workflow management. DOCS is the rendered documentation surface. LinkOS is where docs become browsable.
+
+## WHEN TO USE
+Use this when deciding whether GUIDE should be folded into DOCS, or when explaining how Forge documentation should evolve.
+
+## SIMPLE MODEL
+HELP answers:
+
+    What is this op or object?
+
+GUIDE answers:
+
+    What workflow exists, and how do I manage those workflow docs?
+
+DOCS answers:
+
+    What should be rendered or suggested to the user right now?
+
+LinkOS answers:
+
+    How do we browse and act on all of this comfortably?
+
+## HELP
+Use HELP for exact syntax and failure recovery.
+
+    HELP GREP
+    HELP REPLACE
+    HELP DOCS
+
+HELP should stay close to the real op registry. It is reference material, not prose documentation.
+
+## GUIDE
+Use GUIDE for workflow doc management.
+
+    GUIDE
+    ARGS: list
+
+    GUIDE
+    ARGS: search branch
+
+    GUIDE
+    ARGS: append safe-patch
+
+GUIDE is still valuable because it can list, search, add, append, and replace guide files.
+
+It may eventually render through the same DocPage grammar as DOCS, but the verb should remain as a workflow-management command.
+
+## DOCS
+Use DOCS for rendered documentation intent inside bundles.
+
+    DOCS
+    OPEN: first-run
+
+    DOCS
+    SUGGEST: safe-patch, run-packet
+
+    DOCS
+    REQUEST: anchor-disambiguation
+
+DOCS is the right front door for LinkOS documentation because it can:
+- open docs inline
+- suggest docs in run packets
+- request missing docs for backlog signal
+
+## LINKOS
+LinkOS is the surface.
+
+It should render:
+- docs
+- HELP pages
+- run packets
+- op detail pages
+- missing-doc pages
+- file pages
+
+LinkOS lets Forge stay text-native while making the output humane.
+
+## DECISION
+Do not remove GUIDE.
+
+Instead:
+- keep GUIDE for list/search/add/append/replace
+- make DOCS OPEN the preferred reading path
+- make LinkOS Docs Hub the user-facing browser
+- allow GUIDE show/name to eventually delegate to the DocPage renderer if useful
+
+## PRACTICAL RULE
+When writing a bundle:
+
+Use HELP if syntax matters.
+
+    HELP REPLACE_LINES
+
+Use DOCS OPEN if the user should read the doc now.
+
+    DOCS
+    OPEN: safe-patch
+
+Use DOCS SUGGEST if links would help but should not interrupt the packet.
+
+    DOCS
+    SUGGEST: run-packet, inspect-first
+
+Use GUIDE if managing the guide corpus.
+
+    GUIDE
+    ARGS: search recovery
+
+## RELATED
+- guide — how to manage guides
+- concepts — vocabulary
+- onboarding — new-user path
+- run-packet — packet reading
+- forge-human-surfaces — richer rendered surfaces
