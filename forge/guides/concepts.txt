@@ -1,0 +1,127 @@
+# concepts
+
+## SUMMARY
+Forge is easier once the core words are clear: bundle, op, subject, directive, body, run packet, source of truth, branch, HELP, GUIDE, DOCS, and LinkOS.
+
+## WHEN TO USE
+Use this when onboarding a new user, explaining Forge to another AI, or cleaning up docs so terms stay consistent.
+
+## BUNDLE
+A bundle is the plain-text instruction block the AI gives to the user.
+
+A bundle contains one or more ops separated by blank lines.
+
+    LIST_FILES .
+    DEPTH: 2
+    FILES: no
+
+    HELP REPLACE
+
+## OP
+An op is one Forge action.
+
+Examples:
+- LIST_FILES
+- PREVIEW
+- REPLACE
+- RUN_FILE
+- DOCS
+- JOURNAL
+
+Some ops inspect. Some write. Some run code. Some open surfaces.
+
+## SUBJECT
+The subject is the thing after the op name.
+
+    PREVIEW forge/guides/boot.txt
+
+Here, forge/guides/boot.txt is the subject.
+
+## DIRECTIVE
+A directive is a setting line inside an op.
+
+    LIST_FILES .
+    DEPTH: 2
+    FILES: no
+
+DEPTH and FILES are directives.
+
+Each op allows different directives. Use HELP when unsure.
+
+## BODY
+A body is a block of text used by write ops.
+
+    CREATE_FILE scratch/example.txt
+    BEGIN_BODY
+    Hello from Forge.
+    END_BODY
+
+Use body fences whenever an op writes multi-line content.
+
+## RUN PACKET
+The run packet is Forge's report after a bundle runs.
+
+It shows:
+- the run ID
+- every op
+- every status
+- preview output
+- failures and hints
+
+The packet is the source of truth.
+
+## SOURCE OF TRUTH
+The AI may propose. The user may run. But only the packet proves what happened.
+
+No packet means no confirmed change.
+
+## BRANCH
+A branch is a named filesystem checkpoint. Use it before risky patches.
+
+    BRANCH create before_big_change
+    BEGIN_BODY
+    path/to/file.py
+    END_BODY
+
+Branches include standalone restore scripts, so they are useful even when Forge itself breaks.
+
+## HELP
+HELP answers: what is this object or op?
+
+    HELP REPLACE
+    HELP DOCS
+
+Use HELP after every FAILED_PARSE before retrying.
+
+## GUIDE
+GUIDE manages workflow docs.
+
+    GUIDE
+    ARGS: list
+
+    GUIDE
+    ARGS: search branch
+
+GUIDE is still useful for listing, searching, adding, and updating docs.
+
+## DOCS
+DOCS is the rendered documentation surface.
+
+    DOCS
+    OPEN: safe-patch
+
+    DOCS
+    SUGGEST: run-packet, inspect-first
+
+Use DOCS OPEN when the user should read a doc inline now. Use DOCS SUGGEST when the packet should include helpful links.
+
+## LINKOS
+LinkOS is the text-first surface that renders run packets, docs, HELP pages, file pages, and command surfaces.
+
+It makes Forge easier to read without making Forge less plain-text native.
+
+## RELATED
+- first-run — smallest complete Forge experience
+- the-loop — how the clipboard cycle works
+- docs-vs-guide — HELP, GUIDE, DOCS, and LinkOS
+- safe-patch — safe editing workflow
