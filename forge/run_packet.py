@@ -48,11 +48,26 @@ def format_run_packet(results, stamp=None, step=None, max_steps=None, normalise_
 
     lines += ['', 'APPLIED=%d  SKIPPED=%d  FAILED=%d' % (applied, skipped, failed)]
 
-    previews = [r for r in visible if r.get('preview')]
-    if previews:
+    preview_blocks = []
+    for r in visible:
+        if r.get('preview'):
+            preview_blocks.append(r.get('preview'))
+            continue
+
+        out_obj = r.get('out') or {}
+        stdout_text = ''
+        if isinstance(out_obj, dict):
+            stdout_text = out_obj.get('stdout') or ''
+        if not stdout_text:
+            stdout_text = r.get('stdout') or ''
+
+        if stdout_text:
+            preview_blocks.append(stdout_text)
+
+    if preview_blocks:
         lines.append('')
         lines.append('=== PREVIEW ===')
-        for r in previews:
-            lines.append(r.get('preview'))
+        for block in preview_blocks:
+            lines.append(str(block).rstrip())
 
     return '\n'.join(lines).rstrip() + '\n'
