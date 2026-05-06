@@ -1,0 +1,141 @@
+# tutorial-search
+
+## SUMMARY
+Learn how to find and inspect code safely before changing it. This tutorial teaches GREP, LIST_TARGETS, PREVIEW, and HELP.
+
+## WHEN TO USE
+Use this after [[tutorial-files]] when you are ready to explore a real codebase safely without editing anything.
+
+## GOAL
+Learn the core inspection loop:
+
+1. Search for a term.
+2. Find the relevant file.
+3. List patchable targets.
+4. Preview the exact code.
+5. Use HELP before editing.
+
+This tutorial is read-only. It does not change files.
+
+## WHY SEARCH FIRST
+Forge is safest when you inspect before patching.
+
+Do not guess file paths. Do not guess method names. Search first, then preview the result.
+
+## STEP 1 — SEARCH FOR A KNOWN TERM
+This bundle searches the LinkOS docs code for the word onboarding.
+
+    @forge-bundle tutorial-search-grep
+    GREP forge/extensions/linkos
+    PATTERN: onboarding
+    EXT: .py
+    CONTEXT: 3
+    LIMIT: 20
+    @end-forge-bundle
+
+## EXPECT
+The packet should show GREP hits with nearby lines.
+
+Useful things to notice:
+- file paths
+- line numbers
+- nearby context
+- whether the term appears once or many times
+
+## STEP 2 — LIST PATCHABLE TARGETS
+Once you know a likely file, list its Python targets.
+
+    @forge-bundle tutorial-search-targets
+    LIST_TARGETS forge/extensions/linkos/pages/home.py
+    @end-forge-bundle
+
+## EXPECT
+The packet should show classes, functions, methods, and assignments that Forge can target.
+
+This is useful before AST patch ops like REPLACE, INSERT_AFTER, or INSERT_INTO.
+
+## STEP 3 — PREVIEW A FILE SLICE
+Preview the exact area before making decisions.
+
+    @forge-bundle tutorial-search-preview
+    PREVIEW forge/extensions/linkos/pages/home.py
+    LINES: 28-60
+    @end-forge-bundle
+
+## EXPECT
+The packet should show numbered source lines.
+
+Those line numbers help you discuss precise edits with the AI or choose a safe patch range.
+
+## STEP 4 — ASK FOR OP HELP
+Before using an unfamiliar op, read its HELP.
+
+    @forge-bundle tutorial-search-help
+    HELP GREP
+
+    HELP PREVIEW
+
+    HELP LIST_TARGETS
+    @end-forge-bundle
+
+## EXPECT
+The packet should show exact syntax, allowed directives, common failures, and examples.
+
+Use HELP especially after FAILED_PARSE.
+
+## STEP 5 — FULL INSPECT-FIRST MINI LOOP
+This bundle combines the pattern.
+
+    @forge-bundle tutorial-search-inspect-first
+    GREP forge/extensions/linkos
+    PATTERN: doc_hero
+    EXT: .py
+    CONTEXT: 2
+    LIMIT: 20
+
+    LIST_TARGETS forge/extensions/linkos/pages/doc.py
+
+    PREVIEW forge/extensions/linkos/pages/doc.py
+    LINES: 243-310
+
+    DOCS
+    SUGGEST: inspect-first, safe-patch, run-packet
+    @end-forge-bundle
+
+## EXPECT
+The packet should give you:
+- search hits
+- patchable targets
+- a specific preview slice
+- suggested docs for safe next steps
+
+This is the shape to use before real edits.
+
+## WHAT YOU LEARNED
+You learned how to inspect a codebase without changing it.
+
+The habit is:
+
+    GREP first.
+    LIST_TARGETS if it is Python.
+    PREVIEW the exact area.
+    HELP before unfamiliar ops.
+    Patch only after you know what is actually there.
+
+## COMMON MISTAKES
+- Searching the whole project when a smaller folder would do.
+- Previewing huge files instead of tight line ranges.
+- Patching from memory instead of from the latest packet.
+- Retrying a failed parse without reading HELP.
+- Treating SKIPPED as success without understanding why it skipped.
+
+## NEXT
+Go to [[tutorial-patching]] when you are ready to make a small safe edit with a branch.
+
+## RELATED
+- tutorial — learning hub
+- tutorial-loop — first read-only loop
+- tutorial-files — safe scratch file operations
+- inspect-first — the full workflow guide
+- safe-patch — safe edits and recovery
+- run-packet — reading Forge output
