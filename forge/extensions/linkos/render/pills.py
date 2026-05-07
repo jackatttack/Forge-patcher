@@ -19,7 +19,7 @@ except Exception:
     _console = None
 
 from forge.extensions.linkos.render.primitives import (
-    colour, reset, url,
+    colour, reset, url, root_router_installed,
 )
 
 
@@ -46,7 +46,11 @@ def pill_link(label, *args, **kwargs):
     # so preserve the label as plain text.
     captured = hasattr(sys.stdout, 'getvalue')
 
-    if not captured and _console and hasattr(_console, 'write_link'):
+    # In contained mode LinkOS is display-only: render useful labels rather
+    # than dead tappable links that Pythonista cannot resolve reliably.
+    links_active = root_router_installed() and bool(href)
+
+    if links_active and not captured and _console and hasattr(_console, 'write_link'):
         try:
             colour(tone)
             _console.write_link(text, href)
