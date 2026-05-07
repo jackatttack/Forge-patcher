@@ -28,6 +28,7 @@ CATEGORIES = [
 
 DOC_GROUPS = {
     'onboarding': [
+        ('🧭 ', 'start_here', 'safe orientation', ('start-here',), 'success'),
         ('🚪 ', 'onboarding', 'start here', ('doc', 'onboarding'), 'success'),
         ('🧠 ', 'llm_first_time_guide', 'AI guide', ('doc', 'llm-first-time-guide'), 'warning'),
         ('🌱 ', 'first_boot', 'first run', ('doc', 'first-boot'), 'success'),
@@ -37,6 +38,7 @@ DOC_GROUPS = {
         ('📦 ', 'run_packet', 'packet truth', ('doc', 'run-packet'), 'border'),
     ],
     'safety': [
+        ('🩺 ', 'install_health', 'check install', ('install-health',), 'warning'),
         ('🛟 ', 'safe_patch', 'patch safely', ('doc', 'safe-patch'), 'success'),
         ('🔒 ', 'core_edit', 'core guard', ('doc', 'core-edit'), 'warning'),
         ('🧯 ', 'tutorial_recovery', 'undo + restore', ('doc', 'tutorial-recovery'), 'orange'),
@@ -77,14 +79,16 @@ DOC_GROUPS = {
         ('🧩 ', 'add_custom_op', 'new op', ('doc', 'add-custom-op'), 'accent'),
         ('⚙ ', 'custom_ops', 'op layer', ('doc', 'custom-ops'), 'accent'),
         ('🔒 ', 'tutorial_core', 'core edits', ('doc', 'tutorial-core-edit'), 'danger'),
+    ],
     'all': [
+        ('🧭 ', 'start_here', 'safe orientation', ('start-here',), 'success'),
+        ('🩺 ', 'install_health', 'check install', ('install-health',), 'warning'),
         ('🚪 ', 'onboarding', 'start here', ('doc', 'onboarding'), 'success'),
         ('🧠 ', 'llm_first_time_guide', 'AI guide', ('doc', 'llm-first-time-guide'), 'warning'),
         ('🧭 ', 'root_launcher_mode', 'project scope', ('doc', 'root-launcher-mode'), 'orange'),
         ('🔁 ', 'the_loop', 'clipboard loop', ('doc', 'the-loop'), 'accent'),
         ('🧩 ', 'concepts', 'vocabulary', ('doc', 'concepts'), 'cyan'),
         ('📦 ', 'run_packet', 'packet truth', ('doc', 'run-packet'), 'border'),
-        ('🎓 ', 'tutorial', 'guided intro', ('doc', 'tutorial'), 'warning'),
         ('🎓 ', 'tutorial', 'guided intro', ('doc', 'tutorial'), 'warning'),
         ('🛟 ', 'safe_patch', 'patch safely', ('doc', 'safe-patch'), 'success'),
         ('🧯 ', 'tutorial_recovery', 'recover', ('doc', 'tutorial-recovery'), 'orange'),
@@ -101,7 +105,6 @@ CATEGORY_TITLES = {
     'ops': ('Docs Ops Help', 'commands'),
     'tutorials': ('Docs Tutorials', 'worked examples'),
     'extension': ('Docs Extension', 'build Forge'),
-    'surfaces': ('Docs Surfaces', 'UI + render language'),
     'all': ('Docs Index', 'curated list'),
 }
 
@@ -119,7 +122,6 @@ def docs_page(category=''):
             'Forge onboarding, safety, ops, tutorials, and extension work.'
         )
         doc_tile_grid('docs hub', CATEGORIES)
-        doc_hero('Docs', 'learn forge')
         doc_footer()
         return
 
@@ -128,12 +130,10 @@ def docs_page(category=''):
         doc_text('No docs category exists for: %s' % category, tone='muted')
         doc_section('categories')
         doc_tile_grid('docs hub', CATEGORIES)
-        doc_hero('Docs', 'unknown category')
         doc_footer()
         return
 
     title, subtitle = CATEGORY_TITLES.get(category, ('Docs', category))
     doc_hero(title, subtitle)
     doc_tile_grid(category, DOC_GROUPS.get(category) or [])
-    doc_hero(title, subtitle)
     doc_footer()
