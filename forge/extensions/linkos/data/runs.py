@@ -21,12 +21,9 @@ try:
     from forge.runtime.paths import project_root
     _PROJECT_ROOT = project_root()
 except Exception:
-    _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
-
+    _PROJECT_ROOT = os.environ.get('FORGE_INSTALL_ROOT') or os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
 
 RUNS_DIR = os.path.join(_PROJECT_ROOT, 'artifacts', 'runs')
-
-
 PATCH_OPS = set([
     'CREATE_FILE', 'REPLACE_FILE', 'REPLACE_FILE_LINES', 'REPLACE_FILE_RANGE',
     'INSERT_FILE_LINE', 'COPY_FILE', 'MOVE_FILE', 'MOVE_DIR', 'DELETE_FILE',
