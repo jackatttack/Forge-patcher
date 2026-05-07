@@ -1,175 +1,110 @@
 # Forge
 
-Forge is a clipboard-based patching and automation harness for Pythonista on iOS.
+Forge is a local AI development harness for Pythonista on iOS.
 
-You work with an AI assistant. The assistant writes a plain-text Forge bundle. You copy that bundle to your clipboard, run forge_entry.py in Pythonista, and Forge executes the bundle locally. Forge then writes a run packet back to your clipboard. You paste that packet back to the assistant.
+It lets an AI assistant help inspect, patch, run, and recover code on your device while you stay in control. The assistant writes a plain-text Forge bundle. You choose when to run it. Forge executes it locally and returns a run packet.
 
-The run packet is the source of truth. The assistant should not claim a file changed, moved, deleted, uploaded, or tested unless the packet confirms it.
+The run packet is the source of truth.
+
+## Why Forge exists
+
+Most AI coding tools assume a desktop, a cloud workspace, or direct agent access.
+
+Forge is different:
+
+- local-first
+- clipboard-driven
+- human-in-the-loop
+- packet-audited
+- recoverable
+- built for Pythonista on iPhone and iPad
+
+The assistant can suggest actions, but Forge only runs what you copy and execute.
 
 ## The loop
 
-AI writes bundle -> you run Forge -> Forge returns packet -> AI continues
+1. The assistant writes a Forge bundle.
+2. You copy it.
+3. You run `forge_entry.py` in Pythonista.
+4. Forge runs the bundle locally.
+5. Forge copies a run packet back to your clipboard.
+6. You paste the packet back to the assistant.
+7. The assistant reads the packet and decides the next safe step.
 
-Forge gives an AI a safe local command surface:
+Nothing is confirmed until the packet comes back.
 
-- inspect files
-- preview code and text
-- search the project
-- patch files
-- run Python files
-- create, move, copy, and delete files
-- checkpoint before risky edits
-- recover from bad runs
-- surface onboarding docs
+## Quick install
 
-Forge gives the user a LinkOS surface after each run. The packet is copied for the AI; LinkOS is rendered at the bottom of the Pythonista console for the human.
+Create a new Pythonista file named:
 
-Forge is not background automation. It is a tight human-in-the-loop workflow.
+    install_forge.py
 
-## AI handoff
-
-If you want an LLM to help you with Forge, start by giving it this root-level file:
-
-    AI_FIRST_BOOT.txt
-
-That file explains Forge, the install flow, contained mode, root launcher mode, LinkOS, HELP, health checks, and the packet loop.
-
-A docs copy also lives at:
-
-    docs/AI_FIRST_BOOT.txt
-
-## Setup
-
-You need Pythonista on iOS or iPadOS.
-
-### Quick install
-
-Create a new Pythonista file named install_forge.py, paste the installer script from this repo, and run it.
-
-The installer downloads the latest public Forge repo from GitHub and installs it into:
-
-    Forge/
+Paste in the installer script from this repo and run it.
 
 Then open:
 
     Forge/forge_entry.py
 
-and run it once.
-
-### Manual install
-
-Download this repository from GitHub, place it in your Pythonista Documents folder, open forge_entry.py, and run it once.
-
-On first run, if your clipboard does not contain a valid Forge bundle, Forge may return a failed-parse run packet. That is expected. The packet should still help orient you, and forge_entry.py should render LinkOS afterwards as the final console surface.
+Run it once.
 
 ## Start with an AI assistant
 
-Open docs/AI_FIRST_BOOT.txt and paste it into a fresh AI chat.
+Open this file and paste it into a fresh AI chat:
 
-That file tells the assistant how Forge works and tells it to give you the minimal first bundle. Copy the bundle, run forge_entry.py, and paste the returned packet back.
+    AI_FIRST_BOOT.txt
 
-A good first bundle is also saved at:
+That guide teaches the assistant how Forge works, how to stay packet-driven, and how to give you the first safe runnable bundle.
 
-    docs/MINIMAL_BOOT_BUNDLE.txt
+A docs copy also lives at:
+
+    docs/AI_FIRST_BOOT.txt
+
+## First safe files
+
+These files are safe starting points:
+
+    start_here.py
+    install_health.py
+    forge_public_smoke.py
+    linkos.py
+    AI_FIRST_BOOT.txt
+
+`start_here.py` explains what Forge is.
+
+`install_health.py` checks your install without changing files.
+
+`forge_public_smoke.py` checks important files and syntax.
+
+`linkos.py` opens the human-facing LinkOS surface.
+
+## LinkOS
+
+Forge also renders a human-facing console surface called LinkOS.
+
+LinkOS helps you understand what happened, where you are, and what to do next. It provides docs, health checks, run views, recovery links, and safe exits.
 
 ## Contained mode first
 
-Forge works out of the box in contained mode.
+Forge starts in contained mode.
 
-Contained mode means Forge runs inside its own install folder. This is safest for first use.
+Contained mode means Forge works inside its own install folder. This is the safest setup for first use.
 
-LinkOS still renders in contained mode. Some console buttons may be display-only because Pythonista does not always resolve nested script links reliably. If a LinkOS button does not launch, just run forge_entry.py manually.
+Some LinkOS buttons may be display-only in contained mode. That is fine. You can still run `forge_entry.py` manually.
 
 ## Optional root router
 
-When you are comfortable with Forge, you can enable root launcher mode by running:
+When you want tappable LinkOS links and wider workspace access, run:
 
     install_root_router.py
 
-This creates small launcher files at Pythonista Documents root:
+This creates small launcher files at Pythonista Documents root.
 
-    forge_entry.py
-    linkos.py
-
-Benefits:
-
-- tappable LinkOS console links
-- easier Shortcut setup
-- wider Pythonista Documents workspace access
-
-Risk:
-
-- Forge can inspect and patch more of your workspace
-
-Only enable root launcher mode deliberately. Keep trusting the run packet and inspect before editing.
-
-## Useful first bundle
-
-    LIST_FILES .
-    DEPTH: 2
-    FILES: yes
-
-    LIST_OPS
-
-    DOCS
-    OPEN: onboarding
-    SUGGEST: concepts, the-loop, run-packet, tutorial-loop, inspect-first, safe-patch
-
-    HELP DOCS
-
-    HELP LINKOS
-
-    HELP LIST_FILES
-
-    HELP CREATE_FILE
-
-    HELP RUN_FILE
-
-Run that through Forge and paste the packet back to the assistant.
-
-LinkOS should render automatically after the packet. You do not need to include a LINKOS op in the first bundle.
-
-## Learning Forge
-
-Forge includes docs and guides for the assistant to read and explain.
-
-Important starting points:
-
-- onboarding: start here
-- concepts: key vocabulary
-- the-loop: how the clipboard loop works
-- run-packet: how to read Forge output
-- tutorial: hands-on learning hub
-- tutorial-loop: first practical lesson
-- inspect-first: discovery before edits
-- safe-patch: safer patching and recovery
-- root-launcher-mode: optional root router and wider access
-
-For exact syntax, the assistant should use HELP followed by the op name.
-
-For workflow guidance, it should use DOCS and the LinkOS surface rendered after each run.
-
-## Recovery
-
-Forge records run artifacts so you can recover from mistakes.
-
-Useful recovery ops:
-
-- LIST_RUNS: show recent runs
-- DIFF <run_id>: inspect changes from a run
-- REVERT_RUN <run_id>: restore files from a run snapshot
-- BRANCH create <name>: checkpoint files before risky work
-
-Before risky edits, the assistant should consider whether a branch is needed. For normal small documentation edits, branches are usually unnecessary.
-
-## Smoke test
-
-Run this after install or update:
-
-    forge_public_smoke.py
-
-It checks important files and compiles the core public Forge scripts.
+Only enable this deliberately. Root mode gives Forge access to more of your workspace.
 
 ## Core rule
 
-Inspect before editing. Keep bundles small. Trust the run packet.
+Inspect before editing.
+
+Keep bundles small.
+
+Trust the packet.
