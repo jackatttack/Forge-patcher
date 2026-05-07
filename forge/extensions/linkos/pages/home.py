@@ -5,17 +5,9 @@ forge.extensions.linkos.pages.home
 
 The top-level LinkOS launcher.
 
-Three sections, top to bottom in console scroll order:
-
-1. Hero + intro paragraph — orientation for new users.
-2. Latest run card — the run panel is LinkOS's primary surface, so
-   "what just happened" is always one tap away from home.
-3. Workbench tile grid — six destinations covering files, runs, docs,
-   shortcuts, scratch, and bank.
-
-Home is for going somewhere. The run page is for acting on something.
-Home deliberately has no action grid — actions live on the pages you
-navigate into.
+Home is a friendly command centre. Start Here is the lifeboat. Home should
+make the safe path obvious while still giving experienced users fast routes
+to runs, docs, files, health, and the Forge loop.
 """
 
 from forge.extensions.linkos.data import runs as _runs
@@ -30,29 +22,36 @@ def home():
     doc_hero('LinkOS Home', 'forge command surface')
 
     doc_inline(
-        'New here? Tap Start to copy the first-time LLM guide. '
-        'Paste that guide into an LLM first; it will explain Forge and give you the first runnable bundle. '
-        'You can also read [[onboarding]] or jump into [[tutorial]].',
+        'New here or something weird happened? Open [[onboarding]], tap Start Here, '
+        'or run install_health.py. LinkOS is the human-facing layer: it should '
+        'help you understand where you are before you do anything risky.',
         source='home:intro',
     )
 
-    # Latest run — the most likely thing you wanted when you tapped LinkOS.
+    doc_tile_grid('safe first', [
+        ('🧭 ', 'Start Here', 'orientation', ('start-here',), 'success'),
+        ('🩺 ', 'Health', 'install check', ('install-health',), 'warning'),
+        ('🏁 ', 'Start', 'copy LLM guide', ('start',), 'success'),
+        ('▶️ ', 'Run Forge', 'clipboard loop', ('run_forge',), 'orange'),
+    ])
+
     doc_section('latest run')
     latest_stamp = _runs.latest_stamp()
     if latest_stamp:
         run = _runs.load_run(latest_stamp)
         doc_run_card(run, route=('run', latest_stamp))
     else:
-        doc_text('No Forge runs yet. Run a bundle and check back here.', tone='muted')
+        doc_text('No Forge runs yet. Run forge_entry.py once, then come back here.', tone='muted')
 
     doc_tile_grid('workbench', [
-        ('🏁 ', 'Start',     'copy LLM guide',  ('start',),                  'success'),
-        ('📖 ', 'Docs',      'learn Forge',     ('docs',),                   'accent'),
-        ('📁 ', 'Files',     'browse project',  ('files', '.'),              'cyan'),
-        ('◎ ',  'Runs',      'history',         ('runs',),                   'success'),
-        ('🛟 ', 'Safety',    'restore + revert',('safety',),                 'border'),
-        ('🎓 ', 'Tutorials', 'learn by doing',  ('docs', 'tutorials'),       'warning'),
-        ('❔ ', 'Help',      'op reference',    ('help', 'HELP'),            'border'),
-        ('▶️ ', 'Run Forge', 'clipboard loop',  ('run_forge',),              'orange'),
+        ('📖 ', 'Docs', 'learn Forge', ('docs',), 'accent'),
+        ('❔ ', 'Help', 'human help', ('help', 'HELP'), 'border'),
+        ('📁 ', 'Files', 'browse project', ('files', '.'), 'cyan'),
+        ('◎ ', 'Runs', 'history', ('runs',), 'success'),
+        ('🛟 ', 'Safety', 'restore + revert', ('safety',), 'border'),
+        ('🧭 ', 'Root Mode', 'optional power', ('doc', 'root-launcher-mode'), 'orange'),
+        ('🎓 ', 'Tutorials', 'learn by doing', ('docs', 'tutorials'), 'warning'),
+        ('⚙ ', 'Ops Help', 'commands', ('docs', 'ops'), 'accent'),
     ])
+
     doc_footer()
