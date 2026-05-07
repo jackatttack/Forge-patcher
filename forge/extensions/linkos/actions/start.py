@@ -1,118 +1,125 @@
 # -*- coding: utf-8 -*-
 """
 forge.extensions.linkos.actions.start
-======================================
+=====================================
 
-First-time Start action for LinkOS.
+Copy the real AI first-boot guide for a fresh assistant.
 
-Copies the LLM first-boot guide, not a raw Forge bundle.
-
-That distinction matters:
-
-- A raw Forge bundle is for forge_entry.py.
-- The first Start handoff is for an LLM.
-- The LLM guide teaches the assistant what Forge is, what a runnable
-  bundle looks like, and what it should output first.
+The Start action is the main handoff from LinkOS to an LLM. It should copy the
+full AI_FIRST_BOOT.txt document, not a tiny placeholder.
 """
 
 import os
 
-try:
-    import clipboard as _clipboard
-except Exception:
-    _clipboard = None
-
-try:
-    import console as _console
-except Exception:
-    _console = None
-
-from forge.extensions.linkos.render.docpage import (
-    doc_actions, doc_footer, doc_hero, doc_text,
-)
-
-try:
-    from forge.runtime.paths import project_root as _project_root
-except Exception:
-    _project_root = None
+import clipboard
 
 
-GUIDE_PATH = 'docs/AI_FIRST_BOOT.txt'
+FALLBACK_GUIDE = '''Forge AI First Boot
+===================
 
+You are helping a user work with Forge.
 
-FALLBACK_LLM_GUIDE = """Forge AI First Boot
+Forge is a local, clipboard-based patching and automation harness for Pythonista on iOS.
 
-You are working with Forge, a clipboard-based patching harness for Pythonista on iOS.
-
-The user will copy one of your Forge bundles to the clipboard, run forge_entry.py in Pythonista, and paste the returned run packet back to you.
+The user will copy Forge bundles from you, run forge_entry.py, and paste the returned run packet back.
 
 The run packet is the source of truth.
 
-Your first response should output the minimal boot bundle from docs/MINIMAL_BOOT_BUNDLE.txt inside a plain code block.
-"""
+A Forge bundle is plain text made of ops like:
+
+    LIST_FILES .
+    DEPTH: 2
+    FILES: yes
+
+    LIST_OPS
+
+    HELP
+
+    HELP HELP
+
+    RUN_FILE start_here.py
+
+Only put runnable Forge syntax inside the bundle. Do not include comments or markdown headings inside runnable bundles.
+
+Your first response should give this orientation bundle:
+
+    LIST_FILES .
+    DEPTH: 2
+    FILES: yes
+
+    LIST_OPS
+
+    HELP
+
+    HELP HELP
+
+    DOCS
+    OPEN: onboarding
+    SUGGEST: concepts, the-loop, run-packet, inspect-first, safe-patch
+
+    RUN_FILE start_here.py
+
+Tell the user to copy the bundle, run forge_entry.py in Pythonista, and paste the packet back.
+
+After every packet, read it carefully. Do not claim files changed, tests passed, or uploads happened unless the packet proves it.
+'''
 
 
-def _root():
-    """Return the current Forge project root."""
-    if _project_root is not None:
+def _project_root():
+    """Return the public Forge install root."""
+    try:
+        from forge.runtime.paths import project_root
+        root = project_root()
+        if root:
+            return os.path.abspath(root)
+    except Exception:
+        pass
+
+    try:
+        here = os.path.abspath(os.path.dirname(__file__))
+        return os.path.abspath(os.path.join(here, '..', '..', '..', '..'))
+    except Exception:
+        return os.path.abspath(os.path.expanduser('~/Documents/Forge'))
+
+
+def _read_guide():
+    """Read the best available AI first-boot guide."""
+    root = _project_root()
+    candidates = [
+        os.path.join(root, 'AI_FIRST_BOOT.txt'),
+        os.path.join(root, 'docs', 'AI_FIRST_BOOT.txt'),
+    ]
+
+    for path in candidates:
         try:
-            return _project_root()
+            if os.path.isfile(path):
+                with open(path, 'r', encoding='utf-8', errors='replace') as f:
+                    text = f.read().strip()
+                if text:
+                    return text
         except Exception:
             pass
 
-    here = os.path.abspath(os.path.dirname(__file__))
-    # start.py -> actions -> linkos -> extensions -> forge -> project root
-    return os.path.abspath(os.path.join(here, '..', '..', '..', '..', '..'))
-
-
-def _read_guide_text():
-    """Read the LLM first-boot guide from disk, with a tiny fallback."""
-    path = os.path.join(_root(), GUIDE_PATH)
-    try:
-        with open(path, 'r', encoding='utf-8', errors='replace') as f:
-            text = f.read().strip()
-        if text:
-            return text + '\n'
-    except Exception:
-        pass
-    return FALLBACK_LLM_GUIDE
+    return FALLBACK_GUIDE.strip()
 
 
 def start():
-    """Copy the first-time LLM guide and render instructions."""
-    copied_text = _read_guide_text()
+    """Copy the AI first-boot guide to the clipboard and print a short status."""
+    text = _read_guide()
+    clipboard.set(text)
 
-    ok = False
-    if _clipboard is not None:
-        try:
-            _clipboard.set(copied_text)
-            ok = True
-        except Exception:
-            ok = False
+    print('')
+    print('=== FORGE START ===')
+    print('')
+    print('Copied AI_FIRST_BOOT.txt to the clipboard.')
+    print('')
+    print('Paste it into a fresh LLM chat.')
+    print('The assistant should return the first safe Forge bundle.')
+    print('')
+    print('chars: %s' % len(text))
+    print('')
+    return text
 
-    if _console:
-        try:
-            if ok:
-                _console.hud_alert('LLM guide copied', 'success', 0.9)
-            else:
-                _console.hud_alert('Copy failed', 'error', 1.0)
-        except Exception:
-            pass
 
-    doc_hero('Start Forge', 'LLM handoff')
-
-    if ok:
-        doc_text('The LLM first-boot guide is now on your clipboard.')
-        doc_text('Paste it into an LLM. It explains Forge, shows what a runnable bundle looks like, and tells the LLM what to output first.')
-        doc_text('The LLM should then give you a small runnable Forge bundle in a code block. Copy that bundle, run forge_entry.py, and paste the packet back.')
-    else:
-        doc_text('Could not copy the LLM guide automatically.', tone='muted')
-        doc_text('Open llm-first-time-guide or docs/AI_FIRST_BOOT.txt and copy the guide manually.', tone='muted')
-
-    doc_actions([
-        ('LLM guide', ('doc', 'llm-first-time-guide'), 'accent', '🤖 '),
-        ('Onboarding', ('doc', 'onboarding'), 'success', '🏁 '),
-        ('Tutorials', ('doc', 'tutorial'), 'warning', '🎓 '),
-        ('Home', ('home',), 'border', '🏠 '),
-    ])
-    doc_footer()
+if __name__ == '__main__':
+    start()
