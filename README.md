@@ -30,39 +30,88 @@ Forge is not background automation. It is a tight human-in-the-loop workflow.
 
 You need Pythonista on iOS or iPadOS.
 
-1. Put this repository in your Pythonista Documents folder.
-2. Open forge_entry.py in Pythonista.
-3. Run it once.
+### Quick install
+
+Create a new Pythonista file named install_forge.py, paste the installer script from this repo, and run it.
+
+The installer downloads the latest public Forge repo from GitHub and installs it into:
+
+    Forge/
+
+Then open:
+
+    Forge/forge_entry.py
+
+and run it once.
+
+### Manual install
+
+Download this repository from GitHub, place it in your Pythonista Documents folder, open forge_entry.py, and run it once.
 
 On first run, if your clipboard does not contain a valid Forge bundle, Forge may return a failed-parse run packet. That is expected. The packet should still help orient you, and forge_entry.py should render LinkOS afterwards as the final console surface.
 
-For a faster loop, create an iOS Shortcut that runs forge_entry.py, then pin that Shortcut somewhere convenient.
-
-## Starting with an AI assistant
+## Start with an AI assistant
 
 Open docs/AI_FIRST_BOOT.txt and paste it into a fresh AI chat.
 
-That file tells the assistant how Forge works and tells it to ask you to run docs/MINIMAL_BOOT_BUNDLE.txt. Copy the boot bundle, run forge_entry.py, and paste the returned packet back.
+That file tells the assistant how Forge works and tells it to give you the minimal first bundle. Copy the bundle, run forge_entry.py, and paste the returned packet back.
 
-After that, the assistant should guide you through Forge using docs, HELP, LinkOS, and the run packet.
+A good first bundle is also saved at:
+
+    docs/MINIMAL_BOOT_BUNDLE.txt
+
+## Contained mode first
+
+Forge works out of the box in contained mode.
+
+Contained mode means Forge runs inside its own install folder. This is safest for first use.
+
+LinkOS still renders in contained mode. Some console buttons may be display-only because Pythonista does not always resolve nested script links reliably. If a LinkOS button does not launch, just run forge_entry.py manually.
+
+## Optional root router
+
+When you are comfortable with Forge, you can enable root launcher mode by running:
+
+    install_root_router.py
+
+This creates small launcher files at Pythonista Documents root:
+
+    forge_entry.py
+    linkos.py
+
+Benefits:
+
+- tappable LinkOS console links
+- easier Shortcut setup
+- wider Pythonista Documents workspace access
+
+Risk:
+
+- Forge can inspect and patch more of your workspace
+
+Only enable root launcher mode deliberately. Keep trusting the run packet and inspect before editing.
 
 ## Useful first bundle
 
-A good first bundle is:
+    LIST_FILES .
+    DEPTH: 2
+    FILES: yes
 
-LIST_FILES .
-DEPTH: 2
-FILES: yes
+    LIST_OPS
 
-LIST_OPS
+    DOCS
+    OPEN: onboarding
+    SUGGEST: concepts, the-loop, run-packet, tutorial-loop, inspect-first, safe-patch
 
-DOCS
-OPEN: onboarding
-SUGGEST: concepts, the-loop, run-packet, tutorial-loop, inspect-first, safe-patch
+    HELP DOCS
 
-HELP DOCS
+    HELP LINKOS
 
-HELP LINKOS
+    HELP LIST_FILES
+
+    HELP CREATE_FILE
+
+    HELP RUN_FILE
 
 Run that through Forge and paste the packet back to the assistant.
 
@@ -82,6 +131,7 @@ Important starting points:
 - tutorial-loop: first practical lesson
 - inspect-first: discovery before edits
 - safe-patch: safer patching and recovery
+- root-launcher-mode: optional root router and wider access
 
 For exact syntax, the assistant should use HELP followed by the op name.
 
@@ -99,6 +149,14 @@ Useful recovery ops:
 - BRANCH create <name>: checkpoint files before risky work
 
 Before risky edits, the assistant should consider whether a branch is needed. For normal small documentation edits, branches are usually unnecessary.
+
+## Smoke test
+
+Run this after install or update:
+
+    forge_public_smoke.py
+
+It checks important files and compiles the core public Forge scripts.
 
 ## Core rule
 
