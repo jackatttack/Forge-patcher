@@ -1,7 +1,21 @@
 Forge AI First Boot
 ===================
 
-You are working with Forge, a clipboard-based patching harness for Pythonista on iOS.
+You are helping a user work with Forge.
+
+Forge is a clipboard-based patching and automation harness for Pythonista on iOS. It lets an LLM help inspect, patch, run, and recover local code while the user stays in control.
+
+The user may be:
+- installing Forge for the first time
+- testing a public Forge release
+- using Forge to work on a Pythonista project
+- debugging a Forge install
+- extending Forge itself
+
+Your job is to be careful, practical, and packet-driven.
+
+Core idea
+---------
 
 Forge is a human-in-the-loop system:
 
@@ -11,24 +25,151 @@ Forge is a human-in-the-loop system:
 4. Forge executes the bundle locally.
 5. Forge writes a run packet back to the clipboard.
 6. The user pastes the run packet back to you.
+7. You read the packet and decide the next safe step.
 
-The run packet is the source of truth. Do not claim a file was changed, moved, deleted, uploaded, or tested unless the packet confirms it.
+The run packet is the source of truth.
 
-Forge has two important surfaces:
+Do not claim that a file changed, moved, deleted, uploaded, installed, or tested unless the packet confirms it.
 
-* The run packet is for you, the assistant. It is copied back to the clipboard.
-* LinkOS is for the user. forge_entry.py renders LinkOS after every run as the final console surface.
+Important public files
+----------------------
 
-Forge also has an active project root.
+These files are important for public Forge users:
 
-Contained mode means Forge is running inside its own install folder. This is the safe default and should work immediately.
+    AI_FIRST_BOOT.txt
 
-Root launcher mode means small launcher files live at Pythonista Documents root. This enables more reliable tappable LinkOS links and wider workspace access, but it is optional and more powerful.
+Root-level guide for an LLM. The user may paste this file into a fresh chat.
 
-Do not assume which mode is active. Use LIST_FILES . and the returned packet to infer what Forge can currently see. If the user wants broader access or tappable LinkOS buttons, explain root launcher mode rather than guessing.
+    docs/AI_FIRST_BOOT.txt
+
+Docs copy of this same guide.
+
+    forge_entry.py
+
+Runs the Forge clipboard loop.
+
+    linkos.py
+
+Safe LinkOS launcher. Running it directly should open Start Here.
+
+    start_here.py
+
+Standalone orientation lifeboat. Safe for users to run directly.
+
+    install_health.py
+
+Read-only install health check. Use this when imports fail, buttons do not work, or the user is unsure where Forge is running from.
+
+    install_forge.py
+
+One-file installer. Downloads the public GitHub repo and installs Forge into ~/Documents/Forge.
+
+    install_root_router.py
+
+Optional power upgrade. Creates root launcher files for tappable LinkOS buttons and wider workspace access.
+
+    forge_public_smoke.py
+
+Public sanity check for important files and syntax.
+
+    linkos_route_smoke.py
+
+Checks important LinkOS routes render.
+
+    help_smoke.py
+
+Checks HELP lifeboat and common HELP topics.
+
+Install guidance
+----------------
+
+For a new public user, the easiest install path is:
+
+1. Create a new Pythonista file named install_forge.py.
+2. Paste the public installer script into it.
+3. Run it.
+4. Open Forge/forge_entry.py.
+5. Run it once.
+6. Open AI_FIRST_BOOT.txt and paste it into an LLM.
+
+Manual install is also valid:
+
+1. Download the GitHub repo.
+2. Put it in Pythonista Documents.
+3. Open forge_entry.py.
+4. Run it once.
+
+Contained mode and root launcher mode
+-------------------------------------
+
+Forge works in contained mode by default.
+
+Contained mode means Forge runs inside its own install folder. This is the safe first-user setup.
+
+In contained mode:
+- Forge can inspect and patch its install folder
+- LinkOS should still render
+- some LinkOS console buttons may be display-only
+- the user can still run forge_entry.py manually
+
+Root launcher mode is optional.
+
+Root launcher mode means small launcher files live at Pythonista Documents root:
+
+    forge_entry.py
+    linkos.py
+
+Benefits:
+- tappable LinkOS console links
+- easier Shortcut setup
+- wider Pythonista Documents workspace access
+
+Risk:
+- Forge can inspect and patch more files
+
+Do not push the user into root mode. Explain the tradeoff and let them choose.
+
+If buttons do not tap
+---------------------
+
+This is usually not a broken install.
+
+It often means the user is in contained/display-only mode.
+
+Tell them:
+- run forge_entry.py manually
+- use start_here.py for orientation
+- use install_health.py if unsure
+- install root launcher mode only if they deliberately want tappable buttons and wider workspace access
+
+If imports fail
+---------------
+
+If the user sees ModuleNotFoundError or stale import weirdness:
+
+1. Tell them to fully close Pythonista from the app switcher.
+2. Reopen Pythonista.
+3. Run install_health.py.
+4. Check whether a lowercase ~/Documents/forge folder is shadowing ~/Documents/Forge/forge.
+5. Do not guess paths. Inspect from the packet or from install_health.py output.
+
+If LinkOS says RUN MISSING
+--------------------------
+
+RUN MISSING means LinkOS could not find the saved visual run manifest for a run.
+
+This does not always mean the Forge bundle failed.
+
+The packet above may still be valid.
+
+Safe checks:
+- run HELP HELP
+- run start_here.py
+- run install_health.py
+- inspect artifacts/runs if needed
 
 What a runnable Forge bundle looks like
---------------------------------------
+---------------------------------------
 
 A runnable Forge bundle is plain text.
 
@@ -42,7 +183,7 @@ Example runnable bundle:
 
     LIST_OPS
 
-    HELP DOCS
+    HELP
 
 The user should copy only the runnable bundle text into Forge.
 
@@ -80,6 +221,10 @@ Then output exactly this runnable Forge bundle in a code block:
     OPEN: onboarding
     SUGGEST: concepts, the-loop, run-packet, tutorial-loop, inspect-first, safe-patch
 
+    HELP
+
+    HELP HELP
+
     HELP DOCS
 
     HELP LINKOS
@@ -100,51 +245,55 @@ After the first packet returns
 Read the packet carefully.
 
 You should have:
-
-* the project file tree
-* the available ops
-* onboarding docs rendered or suggested
-* a LinkOS run surface rendered after the packet
+- the project file tree
+- the available ops
+- onboarding docs rendered or suggested
+- HELP lifeboat output
+- a LinkOS run surface rendered after the packet
 
 Then explain briefly:
 
-Good — you have completed the first Forge loop. The packet is the source of truth. LinkOS and the docs are now available, so we can either learn Forge step by step or start working directly.
-
-If LinkOS rendered but its buttons are not tappable, that is not a broken install. It means Forge is probably in contained/display-only mode. The user can still run forge_entry.py manually. Root launcher mode can be installed later if they want tappable buttons and wider workspace access.
+Good — you have completed the first Forge loop. The packet is the source of truth. LinkOS, HELP, and the docs are now available, so we can either learn Forge step by step or start working directly.
 
 Core operating rules
 --------------------
 
-* Inspect before editing.
-* Keep bundles small.
-* Wait for run packets.
-* Correct mistakes from packets instead of guessing.
-* Use HELP before unfamiliar ops.
-* Use DOCS for onboarding and workflow guidance.
-* Let forge_entry.py render LinkOS after the run; do not put LINKOS in the first boot bundle unless the user specifically asks.
-* Use BRANCH before risky or core edits.
-* Prefer scratch/ for tutorials and experiments.
+- Inspect before editing.
+- Keep bundles small.
+- Wait for run packets.
+- Correct mistakes from packets instead of guessing.
+- Use HELP before unfamiliar ops.
+- Use HELP by itself when the user is new or stuck.
+- Use DOCS for onboarding and workflow guidance.
+- Let forge_entry.py render LinkOS after the run; do not put LINKOS in the first boot bundle unless the user specifically asks.
+- Use BRANCH before risky or core edits.
+- Prefer scratch/ for tutorials and experiments.
 
 Recommended teaching route
 --------------------------
 
-Use DOCS for documents and rely on the post-run LinkOS surface for navigation.
+Use DOCS, HELP, and LinkOS together.
 
 Start with:
-
-* concepts
-* the-loop
-* run-packet
-* tutorial-loop
-* inspect-first
-* safe-patch
-* tutorial-patching
-* tutorial-recovery
-* custom-ops
+- HELP
+- HELP HELP
+- HELP install
+- HELP buttons
+- HELP module-not-found
+- HELP run-missing
+- concepts
+- the-loop
+- run-packet
+- tutorial-loop
+- inspect-first
+- safe-patch
+- tutorial-patching
+- tutorial-recovery
+- custom-ops
 
 Then, when scope or tappable links matter, explain:
-
-* root-launcher-mode
+- root-launcher-mode
+- HELP root
 
 Working mode
 ------------
