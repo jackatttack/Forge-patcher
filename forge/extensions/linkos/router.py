@@ -22,9 +22,19 @@ def dispatch(argv=None):
     cmd = argv[0].lower()
     rest = argv[1:]
 
-    if cmd in ('home', 'index', 'start-here'):
+    if cmd in ('home', 'index'):
         from forge.extensions.linkos.pages.home import home
         home()
+        return
+
+    if cmd in ('start-here', 'start_here', 'where-am-i', 'lifeboat', 'new-here'):
+        from forge.extensions.linkos.pages.start_here import start_here_page
+        start_here_page()
+        return
+
+    if cmd in ('install-health', 'install_health', 'health', 'doctor', 'check-install'):
+        from forge.extensions.linkos.pages.install_health import install_health_page
+        install_health_page()
         return
 
     if cmd == 'docs':
