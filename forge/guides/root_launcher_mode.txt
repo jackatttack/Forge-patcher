@@ -1,67 +1,82 @@
 # root-launcher-mode
 
 ## SUMMARY
-Forge has an active project root. Contained mode keeps Forge inside its own folder. Root launcher mode gives Forge access to the wider Pythonista Documents workspace.
+Forge has two launch modes. Contained mode is the safe default. Root launcher mode is an optional power upgrade that enables tappable LinkOS links and wider Pythonista workspace access.
 
 ## WHEN TO USE
-Use this when a user wants Forge to work across their whole Pythonista workspace instead of only the folder where Forge was installed.
+Use this when the user understands the Forge packet loop and wants Forge to work across their wider Pythonista Documents folder.
 
-## ACTIVE PROJECT ROOT
-Forge always runs against one active project root.
+## THE SIMPLE VERSION
+Forge works immediately in contained mode.
 
-The LLM must not guess the scope.
+In contained mode:
 
-It should run:
+- forge_entry.py runs from inside the Forge install folder
+- LinkOS renders after runs
+- docs, HELP, LIST_FILES, and tutorials work
+- tappable LinkOS console links may be display-only
+- Forge can only work inside the install folder
+
+That is the safest first experience.
+
+Root launcher mode is optional.
+
+In root launcher mode:
+
+- tiny launcher files live at Pythonista Documents root
+- LinkOS buttons become tappable through pythonista3:// links
+- Forge can see and work across the wider Documents workspace
+- Shortcuts are easier to wire to one stable root script
+
+## WHY LINKS NEED A ROOT ROUTER
+LinkOS does not need root to render.
+
+The issue is Pythonista console links. A printed link like:
+
+    pythonista3://linkos.py?action=run&argv=home
+
+needs Pythonista to find a script. A root-level linkos.py is the most reliable target.
+
+So the root router is not the real LinkOS. It is a tiny launcher that routes taps back into the Forge install.
+
+## INSTALLING ROOT ROUTER MODE
+Run this file manually from the Forge install folder:
+
+    install_root_router.py
+
+It creates or replaces these files at Pythonista Documents root:
+
+    forge_entry.py
+    linkos.py
+
+Existing files are backed up first under:
+
+    archive/forge_root_router_before_<timestamp>/
+
+After that, run root forge_entry.py.
+
+## RISK
+Root launcher mode gives Forge broader workspace access.
+
+That is powerful and convenient, but it means a bad bundle could affect more files. Keep using the packet loop properly:
+
+- inspect before editing
+- keep patches small
+- use BRANCH before risky edits
+- trust the run packet, not assumptions
+
+## RULE FOR AI ASSISTANTS
+Do not pressure the user into root mode.
+
+Contained mode is valid. Explain root mode only when the user wants tappable links, Shortcut convenience, or wider project access.
+
+Always infer the active root from the packet:
 
     LIST_FILES .
     DEPTH: 2
     FILES: no
 
-Then infer the active root from the packet.
-
-If the packet only shows the Forge install folder, the user is in contained mode.
-
-If the packet shows the broader Pythonista workspace, the user is in root launcher mode.
-
-## CONTAINED MODE
-Contained mode is the safest first setup.
-
-In this mode:
-
-- forge_entry.py lives inside the Forge install folder
-- linkos.py lives beside forge_entry.py
-- Forge can inspect and patch that folder
-- tutorials and first runs stay contained
-
-This is best for onboarding, experiments, and cautious first use.
-
-## ROOT LAUNCHER MODE
-Root launcher mode is more powerful.
-
-In this mode:
-
-- launcher files live at Pythonista Documents root
-- Forge can inspect and patch the wider workspace
-- project folders, tools, scratch files, and apps become visible from LIST_FILES .
-
-This should be deliberate. Do not surprise the user by expanding scope.
-
-## HOW TO GIVE FORGE ROOT ACCESS
-Use or create an installer/promotion script that places launchers at Pythonista Documents root:
-
-    forge_entry.py
-    linkos.py
-
-The launchers should still import the Forge package from the installed Forge folder or from the root package, depending on the user's setup.
-
-After installing root launchers, run the first safe bundle again and check the packet.
-
-## RULE FOR AI ASSISTANTS
-Never assume Forge can see the whole device or the whole Pythonista workspace.
-
-The packet decides.
-
-If the user asks why Forge cannot see their files, explain contained mode and root launcher mode. Offer to inspect the current root with LIST_FILES before suggesting changes.
+The packet decides what Forge can currently see.
 
 ## RELATED
 - onboarding — first user path
