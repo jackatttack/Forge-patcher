@@ -26,6 +26,18 @@ Forge gives the user a LinkOS surface after each run. The packet is copied for t
 
 Forge is not background automation. It is a tight human-in-the-loop workflow.
 
+## AI handoff
+
+If you want an LLM to help you with Forge, start by giving it this root-level file:
+
+    AI_FIRST_BOOT.txt
+
+That file explains Forge, the install flow, contained mode, root launcher mode, LinkOS, HELP, health checks, and the packet loop.
+
+A docs copy also lives at:
+
+    docs/AI_FIRST_BOOT.txt
+
 ## Setup
 
 You need Pythonista on iOS or iPadOS.
