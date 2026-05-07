@@ -1,10 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-Local launcher for minimal Forge LinkOS.
+linkos.py
+=========
 
-This file lives beside forge_entry.py so Pythonista URL links from this
-minimal install route back into this install, not the user's root/main
-Forge launcher.
+Standalone LinkOS launcher for public Forge.
+
+Safe behaviour:
+- Running this file directly opens Start Here.
+- Passing a route dispatches that route.
+- It does not run a Forge bundle.
+- It should remain a safe file for new users to tap by accident.
+
+Examples:
+    pythonista3://linkos.py?action=run
+    pythonista3://linkos.py?action=run&argv=start-here
+    pythonista3://linkos.py?action=run&argv=help%20install
 """
 
 import os
@@ -30,7 +40,15 @@ def main(argv=None):
             pass
 
     from forge.extensions.linkos.router import dispatch
-    dispatch(sys.argv[1:] if argv is None else argv)
+
+    # Direct-run should be a lifeboat, not a generic dashboard.
+    if argv is None:
+        argv = sys.argv[1:]
+
+    if not argv:
+        argv = ['start-here']
+
+    dispatch(argv)
 
 
 if __name__ == '__main__':
