@@ -4,52 +4,29 @@ forge.extensions.linkos.actions.run_forge
 ========================================
 
 Launch the normal minimal Forge entry loop from LinkOS.
-"""
 
-import os
+Contained mode:
+    LinkOS renders, but the user should run forge_entry.py manually.
+
+Root-router mode:
+    LinkOS can open pythonista3://forge_entry.py?action=run because a
+    deliberate root launcher exists at Pythonista Documents root.
+"""
 
 try:
     import console as _console
 except Exception:
     _console = None
 
-try:
-    from forge.runtime.paths import project_root as _project_root
-except Exception:
-    _project_root = None
-
 from forge.extensions.linkos.render.docpage import (
     doc_actions, doc_footer, doc_hero, doc_text,
 )
+from forge.extensions.linkos.render.primitives import (
+    root_router_installed,
+)
 
 
-def _active_project_root():
-    """Return the active Forge project root."""
-    if _project_root is not None:
-        try:
-            return os.path.abspath(_project_root())
-        except Exception:
-            pass
-    return os.path.abspath(os.path.expanduser('~/Documents'))
-
-
-def _pythonista_script_path(filename):
-    """Return a Pythonista URL path for a script in the active project root."""
-    root = _active_project_root()
-    script = os.path.abspath(os.path.join(root, filename))
-    documents = os.path.abspath(os.path.expanduser('~/Documents'))
-
-    try:
-        rel = os.path.relpath(script, documents)
-        if not rel.startswith('..') and not os.path.isabs(rel):
-            return rel.replace('\\', '/')
-    except Exception:
-        pass
-
-    return filename
-
-
-FORGE_URL = 'pythonista3://%s?action=run' % _pythonista_script_path('forge_entry.py')
+FORGE_URL = 'pythonista3://forge_entry.py?action=run'
 
 
 def _open_url(url):
@@ -69,31 +46,34 @@ def _open_url(url):
 
 
 def run_forge():
-    """Launch forge_entry.py through the normal Pythonista URL route."""
-    ok = _open_url(FORGE_URL)
+    """Launch forge_entry.py when root-router links are active."""
+    links_active = root_router_installed()
+    ok = _open_url(FORGE_URL) if links_active else False
 
     if _console:
         try:
             _console.hud_alert(
-                'Running Forge' if ok else 'Launch failed',
+                'Running Forge' if ok else 'Manual launch needed',
                 'success' if ok else 'error',
                 0.9,
             )
         except Exception:
             pass
 
-    doc_hero('Run Forge', 'launch clipboard loop')
+    doc_hero('Run Forge', 'clipboard loop')
 
     if ok:
         doc_text('Forge has been launched. If a bundle is on the clipboard, it will run through the normal Forge loop.')
         doc_text('After the run completes, return to LinkOS and inspect the latest run.')
     else:
-        doc_text('Could not launch Forge automatically.', tone='muted')
-        doc_text('Run forge_entry.py manually, then return to LinkOS.', tone='muted')
+        doc_text('LinkOS is currently in contained/display-only mode.')
+        doc_text('Run forge_entry.py manually from Pythonista to execute the clipboard bundle.')
+        doc_text('To enable tappable LinkOS buttons and wider workspace access, install the optional root router. This is convenient, but it gives Forge broader access, so only enable it deliberately.', tone='muted')
 
     doc_actions([
         ('Home', ('home',), 'success', '🏠 '),
         ('Docs', ('docs',), 'accent', '📖 '),
         ('Start', ('start',), 'warning', '🏁 '),
+        ('Root mode', ('doc', 'root-launcher-mode'), 'orange', '🧭 '),
     ])
     doc_footer()
