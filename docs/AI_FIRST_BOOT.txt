@@ -1,4 +1,5 @@
 Forge AI First Boot
+===================
 
 You are working with Forge, a clipboard-based patching harness for Pythonista on iOS.
 
@@ -20,10 +21,14 @@ Forge has two important surfaces:
 
 Forge also has an active project root.
 
-Contained mode means Forge is running inside its own install folder. Root launcher mode means Forge launchers live at Pythonista Documents root and can work across the wider Pythonista workspace.
+Contained mode means Forge is running inside its own install folder. This is the safe default and should work immediately.
 
-Do not assume which mode is active. Use LIST_FILES . and the returned packet to infer what Forge can currently see. If the user wants broader access, explain root launcher mode rather than guessing.
+Root launcher mode means small launcher files live at Pythonista Documents root. This enables more reliable tappable LinkOS links and wider workspace access, but it is optional and more powerful.
+
+Do not assume which mode is active. Use LIST_FILES . and the returned packet to infer what Forge can currently see. If the user wants broader access or tappable LinkOS buttons, explain root launcher mode rather than guessing.
+
 What a runnable Forge bundle looks like
+--------------------------------------
 
 A runnable Forge bundle is plain text.
 
@@ -42,6 +47,7 @@ Example runnable bundle:
 The user should copy only the runnable bundle text into Forge.
 
 Important distinction
+---------------------
 
 Docs may contain teaching blocks marked like this:
 
@@ -58,6 +64,7 @@ Do not include @forge-bundle or @end-forge-bundle when you output a runnable bun
 When chatting with the user, output runnable Forge bundles inside a normal code block so they can copy them cleanly.
 
 Your first response
+-------------------
 
 Output one short message telling the user to copy and run this bundle.
 
@@ -88,6 +95,7 @@ Do not add @forge-bundle wrappers.
 Do not improvise a larger first bundle. The boot bundle exists to orient you safely.
 
 After the first packet returns
+------------------------------
 
 Read the packet carefully.
 
@@ -102,7 +110,10 @@ Then explain briefly:
 
 Good — you have completed the first Forge loop. The packet is the source of truth. LinkOS and the docs are now available, so we can either learn Forge step by step or start working directly.
 
+If LinkOS rendered but its buttons are not tappable, that is not a broken install. It means Forge is probably in contained/display-only mode. The user can still run forge_entry.py manually. Root launcher mode can be installed later if they want tappable buttons and wider workspace access.
+
 Core operating rules
+--------------------
 
 * Inspect before editing.
 * Keep bundles small.
@@ -115,27 +126,28 @@ Core operating rules
 * Prefer scratch/ for tutorials and experiments.
 
 Recommended teaching route
+--------------------------
 
 Use DOCS for documents and rely on the post-run LinkOS surface for navigation.
 
 Start with:
+
 * concepts
 * the-loop
 * run-packet
-* root-launcher-mode
 * tutorial-loop
 * inspect-first
 * safe-patch
 * tutorial-patching
 * tutorial-recovery
 * custom-ops
-* inspect-first
-* safe-patch
-* tutorial-patching
-* tutorial-recovery
-* custom-ops
+
+Then, when scope or tappable links matter, explain:
+
+* root-launcher-mode
 
 Working mode
+------------
 
 If the user is already fluent, skip long teaching. Inspect, patch, verify, and continue from packets.
 
@@ -147,4 +159,4 @@ Good working pattern:
 4. Read the packet.
 5. Continue.
 
-Never paste secrets into chat. If a token is needed, tell the user to keep it in a local private file such as forge2/private/github_token.txt.
+Never paste secrets into chat. If a token is needed, tell the user to keep it in a local private file, not in a message.
