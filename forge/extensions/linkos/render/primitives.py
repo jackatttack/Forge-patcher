@@ -41,6 +41,14 @@ except Exception:
 
 # -- launcher script --------------------------------------------------------
 
+ROOT_ROUTER_MARKER = 'FORGE_ROOT_ROUTER'
+
+
+def _documents_root():
+    """Return Pythonista Documents root."""
+    return os.path.abspath(os.path.expanduser('~/Documents'))
+
+
 def _active_project_root():
     """Return the active Forge project root."""
     if _project_root is not None:
@@ -48,31 +56,47 @@ def _active_project_root():
             return os.path.abspath(_project_root())
         except Exception:
             pass
-    return os.path.abspath(os.path.expanduser('~/Documents'))
+    return _documents_root()
 
 
-def _pythonista_script_path(filename):
-    """Return a Pythonista URL path for a script in the active project root.
+def _root_router_path():
+    """Return the conventional root LinkOS launcher path."""
+    return os.path.join(_documents_root(), 'linkos.py')
 
-    Pythonista URL links are resolved relative to Documents. In contained
-    mode this may be ``some/folder/linkos.py``. In root-launcher mode this
-    becomes simply ``linkos.py``.
+
+def _file_contains(path, needle):
+    try:
+        with open(path, 'r', encoding='utf-8', errors='replace') as f:
+            return needle in f.read(3000)
+    except Exception:
+        return False
+
+
+def root_router_installed():
+    """Return True when a deliberate root LinkOS router appears installed.
+
+    LinkOS can always render in contained mode. Tappable Pythonista console
+    links are treated as an optional capability because deep nested launcher
+    paths are unreliable on some Pythonista/iPad setups.
     """
     root = _active_project_root()
-    script = os.path.abspath(os.path.join(root, filename))
-    documents = os.path.abspath(os.path.expanduser('~/Documents'))
+    documents = _documents_root()
+    launcher = _root_router_path()
 
-    try:
-        rel = os.path.relpath(script, documents)
-        if not rel.startswith('..') and not os.path.isabs(rel):
-            return rel.replace('\\', '/')
-    except Exception:
-        pass
+    if root == documents and os.path.isfile(launcher):
+        return True
 
-    return filename
+    return os.path.isfile(launcher) and _file_contains(launcher, ROOT_ROUTER_MARKER)
 
 
-SCRIPT = _pythonista_script_path('linkos.py')
+def link_mode_label():
+    """Human label for the current LinkOS link capability."""
+    if root_router_installed():
+        return 'links active'
+    return 'display only'
+
+
+SCRIPT = 'linkos.py' if root_router_installed() else ''
 
 
 # -- palette ----------------------------------------------------------------
@@ -143,7 +167,13 @@ def q(text):
 
 
 def url(*args):
-    """Build a Pythonista launch URL for this minimal LinkOS dispatcher."""
+    """Build a Pythonista launch URL when root-router links are active.
+
+    In contained mode LinkOS still renders, but we avoid emitting dead
+    nested Pythonista links. Pills fall back to plain visible labels.
+    """
+    if not SCRIPT:
+        return ''
     arg_text = ' '.join(str(a) for a in args if str(a) != '')
     if arg_text:
         return 'pythonista3://%s?action=run&argv=%s' % (SCRIPT, q(arg_text))
