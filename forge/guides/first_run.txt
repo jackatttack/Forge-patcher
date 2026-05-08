@@ -1,0 +1,46 @@
+# first-run
+
+## WHEN TO USE
+Use this after the first Forge bundle has run and a packet has come back.
+
+## WHAT JUST HAPPENED
+Forge read the bundle from the clipboard, ran it locally in Pythonista, saved a run record, and returned a run packet.
+
+The run packet is now the source of truth. Do not rely on what the AI expected to happen. Read what Forge actually reported.
+
+## WHAT TO CHECK FIRST
+Look at the run status.
+
+- Clean run means the bundle completed without failed or skipped ops.
+- Partial run means something was skipped safely and should be reviewed.
+- Failed run means at least one op needs attention before continuing.
+
+Then check the preview/output sections. They usually contain the useful evidence: file listings, code previews, stdout, stderr, or parser hints.
+
+## WHAT TO SEND BACK
+If LinkOS says summary is enough, send the AI handoff or summary.
+
+If the run failed or partially completed, send the failure detail or full packet.
+
+If you are unsure, send the full packet. It is always the safest source of truth.
+
+## SAFE NEXT STEPS
+1. Read the landing summary.
+2. Check any warning or failure section.
+3. Send the packet or handoff back to the AI.
+4. Wait for the AI to inspect the packet before running another patch.
+5. Keep the next bundle small.
+
+## COMMON FIRST-RUN CONFUSION
+If buttons do not tap, contained mode may be active. That is not a broken install. Run forge_entry.py manually.
+
+If you see RUN MISSING, the visual run page could not find saved details. The packet above may still be valid.
+
+If Forge reports FAILED_PARSE, the clipboard probably did not contain a valid Forge bundle.
+
+## RELATED
+- run_packet — how to read packet status
+- the_loop — the clipboard workflow
+- onboarding — first-user orientation
+- inspect_first — inspect before editing
+- safe_patch — patch safely
