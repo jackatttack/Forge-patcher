@@ -65,21 +65,52 @@ COMPILE = [
     'forge_public_smoke.py',
     'internal/linkos_route_smoke.py',
     'internal/help_smoke.py',
+
+    # Core engine / help path.
     'forge/entry.py',
     'forge/op_help.py',
     'forge/ops/core/help_op.py',
+
+    # LinkOS routing + data.
     'forge/extensions/linkos/router.py',
+    'forge/extensions/linkos/state.py',
+    'forge/extensions/linkos/data/docs.py',
+    'forge/extensions/linkos/data/runs.py',
+    'forge/extensions/linkos/data/branches.py',
+    'forge/extensions/linkos/data/doc_log.py',
+
+    # LinkOS render layer.
+    'forge/extensions/linkos/render/cards.py',
+    'forge/extensions/linkos/render/console_code.py',
+    'forge/extensions/linkos/render/docpage.py',
     'forge/extensions/linkos/render/footer.py',
-    'forge/extensions/linkos/render/primitives.py',
+    'forge/extensions/linkos/render/hero.py',
     'forge/extensions/linkos/render/pills.py',
-    'forge/extensions/linkos/actions/start.py',
+    'forge/extensions/linkos/render/primitives.py',
+
+    # LinkOS actions.
+    'forge/extensions/linkos/actions/doc_ops.py',
+    'forge/extensions/linkos/actions/file_ops.py',
+    'forge/extensions/linkos/actions/open_in_pythonista.py',
     'forge/extensions/linkos/actions/run_forge.py',
-    'forge/extensions/linkos/pages/home.py',
-    'forge/extensions/linkos/pages/help.py',
+    'forge/extensions/linkos/actions/run_ops.py',
+    'forge/extensions/linkos/actions/safety_ops.py',
+    'forge/extensions/linkos/actions/start.py',
+
+    # LinkOS pages.
+    'forge/extensions/linkos/pages/coming_soon.py',
+    'forge/extensions/linkos/pages/doc.py',
+    'forge/extensions/linkos/pages/doc_missing.py',
     'forge/extensions/linkos/pages/docs.py',
-    'forge/extensions/linkos/pages/unknown.py',
-    'forge/extensions/linkos/pages/start_here.py',
+    'forge/extensions/linkos/pages/files.py',
+    'forge/extensions/linkos/pages/help.py',
+    'forge/extensions/linkos/pages/home.py',
     'forge/extensions/linkos/pages/install_health.py',
+    'forge/extensions/linkos/pages/run.py',
+    'forge/extensions/linkos/pages/runs.py',
+    'forge/extensions/linkos/pages/safety.py',
+    'forge/extensions/linkos/pages/start_here.py',
+    'forge/extensions/linkos/pages/unknown.py',
 ]
 
 
