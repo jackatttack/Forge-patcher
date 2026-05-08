@@ -32,20 +32,7 @@ import sys
 # under ~/Documents today and can move into containers later.
 DEFAULT_PACKAGES = [
     'forge',
-    'forge_ui',
-    'forge_notes',
-    'journal',
-    'textkit',
-    'games',
-    'tile_calc',
-    'library',
-    'utils',
-    'windows',
-    'rl',
-    'llm_workspace',
 ]
-
-
 # Candidate parent folders to add to sys.path. Keep this list small and
 # intentional; do not walk the whole Documents tree on every launch.
 DEFAULT_CONTAINERS = [
@@ -63,10 +50,44 @@ DEFAULT_CONTAINERS = [
 
 
 def project_root():
-    """Return the Pythonista Documents/project root."""
-    return os.path.abspath(os.path.expanduser('~/Documents'))
+    """Return the installed minimal Forge project root.
 
+    Public Forge is portable: it may live under ~/Documents/Forge,
+    workspaces/, iCloud folders, or another container. The project root is
+    the folder containing both forge_entry.py and the forge/ package.
 
+    Root-router launches set FORGE_INSTALL_ROOT. Prefer that first so
+    tappable Pythonista root links do not accidentally resolve to
+    ~/Documents and then look for docs under lowercase ~/Documents/forge.
+    """
+    def valid_root(path):
+        try:
+            path = os.path.abspath(os.path.expanduser(path or ''))
+            return (
+                os.path.isfile(os.path.join(path, 'forge_entry.py')) and
+                os.path.isdir(os.path.join(path, 'forge'))
+            )
+        except Exception:
+            return False
+
+    env_root = os.environ.get('FORGE_INSTALL_ROOT') or ''
+    if valid_root(env_root):
+        return os.path.abspath(os.path.expanduser(env_root))
+
+    here = os.path.abspath(os.path.dirname(__file__))
+
+    # forge/runtime/paths.py -> forge/ -> project root
+    candidate = os.path.abspath(os.path.join(here, '..', '..'))
+    if valid_root(candidate):
+        return candidate
+
+    # Fallback for unusual development layouts.
+    docs = os.path.abspath(os.path.expanduser('~/Documents'))
+    forge_install = os.path.join(docs, 'Forge')
+    if valid_root(forge_install):
+        return forge_install
+
+    return docs
 def _norm(path):
     return os.path.abspath(os.path.expanduser(path))
 
