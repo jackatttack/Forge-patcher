@@ -8,11 +8,25 @@ Small public/minimal LinkOS dispatcher.
 
 
 def _clean(argv):
+    """Normalise Pythonista argv into route tokens.
+
+    Pythonista URL launches may pass ``argv=docs%20onboarding`` as either
+    ``['docs', 'onboarding']`` or ``['docs onboarding']`` depending on launch
+    path. Flatten every incoming item so tappable LinkOS routes behave the
+    same as subprocess smoke tests.
+    """
     if argv is None:
         return ['home']
     if isinstance(argv, str):
-        argv = argv.split()
-    out = [str(x).strip() for x in (argv or []) if str(x).strip()]
+        argv = [argv]
+
+    out = []
+    for item in argv or []:
+        for part in str(item or '').split():
+            part = part.strip()
+            if part:
+                out.append(part)
+
     return out or ['home']
 
 
