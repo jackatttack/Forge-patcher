@@ -9,12 +9,14 @@ import os
 import subprocess
 import sys
 
-ROOT = os.path.abspath(os.path.dirname(__file__))
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 LINKOS = os.path.join(ROOT, 'linkos.py')
 
 ROUTES = [
     [],
     ['home'],
+    ['run', 'latest'],
+    ['runs'],
     ['help', 'install'],
     ['help', 'run-missing'],
     ['help', 'module-not-found'],
