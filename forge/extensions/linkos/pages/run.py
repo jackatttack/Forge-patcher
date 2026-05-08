@@ -211,6 +211,76 @@ def _render_actions(stamp):
     ])
 
 
+def _center(text, width=41):
+    text = str(text or '')
+    pad = max(0, (width - len(text)) // 2)
+    return (' ' * pad) + text
+
+
+def _spaced_title(text):
+    return ' '.join(str(text or ''))
+
+
+def _human_story(run):
+    counts = run.get('counts') or {}
+    applied = counts.get('applied', 0)
+    skipped = counts.get('skipped', 0)
+    failed = counts.get('failed', 0)
+
+    if failed:
+        return 'Run needs attention. Send the issue detail or full packet back before continuing.'
+    if skipped:
+        return 'Run completed with skipped ops. Review the skipped items before another patch.'
+    if applied:
+        kinds = {}
+        for result in run.get('results') or []:
+            kind = result.get('kind') or 'other'
+            kinds[kind] = kinds.get(kind, 0) + 1
+
+        if kinds.get('patch'):
+            return 'Patch run completed cleanly. Review touched files and tests before continuing.'
+        if kinds.get('run'):
+            return 'Verification run completed cleanly. Summary should be enough.'
+        if kinds.get('inspect'):
+            return 'Inspection run completed cleanly. Summary should be enough.'
+        return 'Run completed cleanly. Summary should be enough.'
+
+    return 'No ops were recorded for this run.'
+
+
+def _bar(count, tone, width=26):
+    count = int(count or 0)
+    filled = min(width, max(0, count))
+    if filled <= 0:
+        filled = 1
+    colour(tone)
+    print('█' * filled, end='')
+    reset()
+
+
+def _render_outcome_chart(applied, skipped, failed):
+    label_w = 9
+    bar_w = 26
+
+    colour('muted')
+    print('   Outcome')
+    reset()
+
+    def row(label, count, tone):
+        colour(tone)
+        print('   ' + label.ljust(label_w), end='')
+        reset()
+        _bar(count, tone, bar_w)
+        print('  ', end='')
+        colour(tone)
+        print(str(count))
+        reset()
+
+    row('applied', applied, 'success')
+    row('skipped', skipped, 'warning')
+    row('failed', failed, 'danger')
+
+
 def _render_summary(run):
     """Render the final bottom landing summary."""
     stamp = run.get('stamp') or '(no run)'
@@ -223,47 +293,39 @@ def _render_summary(run):
     if failed:
         title = 'RUN FAILED'
         tone = 'danger'
-        ready = 'Needs attention.'
     elif skipped:
         title = 'RUN PARTIAL'
         tone = 'warning'
-        ready = 'Check skipped ops.'
     elif applied:
         title = 'RUN CLEAN'
         tone = 'success'
-        ready = 'Ready.'
     else:
         title = 'RUN EMPTY'
         tone = 'muted'
-        ready = 'No ops recorded.'
 
     spacer()
-    thin_rule(46, 'border')
+    thin_rule(46, 'border', char='═')
     spacer()
 
     colour(tone)
-    print((' ' * 9) + ' '.join(title))
+    print(_center(_spaced_title(title)))
     reset()
 
     spacer()
     colour('muted')
-    print((' ' * 10) + stamp)
+    print(_center(stamp))
     reset()
 
     spacer()
-    thin_rule(46, 'border')
+    thin_rule(46, 'border', char='═')
     spacer()
 
-    def centered_count(emoji, count, label, count_tone):
-        text = '%s  %s %s' % (emoji, count, label)
-        pad = max(0, (41 - len(text)) // 2)
-        colour(count_tone)
-        print((' ' * pad) + text)
-        reset()
+    story = _human_story(run)
+    if story:
+        doc_text(story, tone='text')
 
-    centered_count('✅', applied, 'applied', 'success')
-    centered_count('⚠️', skipped, 'skipped', 'warning')
-    centered_count('❌', failed, 'failed', 'danger')
+    spacer()
+    _render_outcome_chart(applied, skipped, failed)
 
     packet = ''
     try:
@@ -271,18 +333,35 @@ def _render_summary(run):
     except Exception:
         packet = ''
 
-    spacer()
-    colour('muted')
-    print((' ' * 11) + 'packet: %s chars' % len(packet))
-    reset()
+    if packet:
+        spacer()
+        detail = 'packet: %s chars' % ('{:,}'.format(len(packet)))
+        colour('muted')
+        print(_center(detail))
+        reset()
 
+    emoji, label = _runs.recommendation(run)
     spacer()
+    rec = '%s %s' % (emoji, label)
     colour(tone)
-    print((' ' * 16) + ready)
+    print(_center(rec))
     reset()
 
     spacer()
-    thin_rule(46, 'border')
+    if failed or skipped:
+        doc_tile_grid('next actions', [
+            ('📋 ', 'Copy packet', 'full truth', ('copy_packet', stamp), 'warning'),
+            ('❌ ', 'Copy issue', 'failure detail', ('copy_failure_detail', stamp), 'danger'),
+            ('🤖 ', 'AI handoff', 'smart slice', ('copy_summary', stamp), 'success'),
+        ])
+    else:
+        doc_tile_grid('next actions', [
+            ('📋 ', 'Copy packet', 'full truth', ('copy_packet', stamp), 'warning'),
+            ('🤖 ', 'AI handoff', 'summary', ('copy_summary', stamp), 'success'),
+        ])
+
+    spacer()
+    thin_rule(46, 'border', char='═')
 
 
 # -- page --------------------------------------------------------------------
