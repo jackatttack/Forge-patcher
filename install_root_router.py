@@ -67,11 +67,36 @@ import sys
 
 FORGE_INSTALL = {install!r}
 
-if FORGE_INSTALL not in sys.path:
-    sys.path.insert(0, FORGE_INSTALL)
+# Root-router launches from ~/Documents, where a lowercase forge/ folder can
+# shadow the contained public install. Force this install to the very front.
+try:
+    while FORGE_INSTALL in sys.path:
+        sys.path.remove(FORGE_INSTALL)
+except Exception:
+    pass
+sys.path.insert(0, FORGE_INSTALL)
 
 os.environ['FORGE_ROOT_LAUNCHER'] = '1'
 os.environ['FORGE_INSTALL_ROOT'] = FORGE_INSTALL
+
+
+def _evict_forge_modules():
+    \"\"\"Evict cached Forge modules so root-router launches use FORGE_INSTALL.
+
+    Pythonista can keep modules alive between runs. If an older/root-level
+    forge package was imported earlier, merely changing sys.path is not enough:
+    Python will reuse the cached package. Root-router launches must be
+    deterministic, so clear forge and all forge.* modules before dispatch.
+    \"\"\"
+    stale = [
+        name for name in list(sys.modules.keys())
+        if name == 'forge' or name.startswith('forge.')
+    ]
+    for name in stale:
+        try:
+            del sys.modules[name]
+        except Exception:
+            pass
 """.format(marker=MARKER, install=HERE)
 
 
@@ -81,6 +106,7 @@ def _forge_entry_text():
 TARGET = os.path.join(FORGE_INSTALL, 'forge_entry.py')
 
 if __name__ == '__main__':
+    _evict_forge_modules()
     runpy.run_path(TARGET, run_name='__main__')
 """
 
@@ -89,20 +115,14 @@ def _linkos_text():
     return _launcher_common() + """
 
 def main(argv=None):
-    stale = [
-        name for name in list(sys.modules.keys())
-        if name == 'forge.extensions'
-        or name == 'forge.extensions.linkos'
-        or name.startswith('forge.extensions.linkos.')
-    ]
-    for name in stale:
-        try:
-            del sys.modules[name]
-        except Exception:
-            pass
+    _evict_forge_modules()
 
     from forge.extensions.linkos.router import dispatch
-    dispatch(sys.argv[1:] if argv is None else argv)
+
+    args = sys.argv[1:] if argv is None else (argv or [])
+    if not args:
+        args = ['start-here']
+    dispatch(args)
 
 
 if __name__ == '__main__':
