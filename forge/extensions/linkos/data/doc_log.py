@@ -35,7 +35,7 @@ except Exception:
 
 
 LOG_PATH = os.path.join(
-    _PROJECT_ROOT, 'forge', 'artifacts', 'doc_link_log.json',
+    _PROJECT_ROOT, 'artifacts', 'doc_link_log.json',
 )
 
 # Keep the log bounded. When it grows past this many entries, the
