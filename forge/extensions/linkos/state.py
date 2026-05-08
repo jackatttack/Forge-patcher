@@ -26,7 +26,7 @@ try:
 except Exception:
     PROJECT_ROOT = os.path.expanduser('~/Documents')
 
-STATE_PATH = os.path.join(PROJECT_ROOT, 'forge', 'artifacts', 'linkos_state.json')
+STATE_PATH = os.path.join(PROJECT_ROOT, 'artifacts', 'linkos_state.json')
 
 
 def route_to_text(args):
