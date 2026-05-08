@@ -287,6 +287,87 @@ def _render_summary(run):
 
 # -- page --------------------------------------------------------------------
 
+def _is_clean_single_help_run(run):
+    """Return True when a run is a single successful HELP op."""
+    results = run.get('results') or []
+    if len(results) != 1:
+        return False
+
+    r = results[0]
+    op = str(r.get('op') or '').upper()
+    status = str(r.get('status') or '').upper()
+
+    return op == 'HELP' and 'FAIL' not in status and 'SKIP' not in status
+
+
+def _render_help_preview_text(preview):
+    """Render plain HELP preview text as simple LinkOS sections.
+
+    This keeps public minimal HELP runs readable without depending on the
+    richer private LinkOS renderers.
+    """
+    lines = str(preview or '').splitlines()
+    current = []
+
+    def flush():
+        if not current:
+            return
+        for item in current:
+            if item.strip():
+                doc_text(item.strip())
+        del current[:]
+
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            flush()
+            continue
+
+        heading = stripped.strip('= ').strip()
+        is_banner = stripped.startswith('===') and stripped.endswith('===')
+        is_section = (
+            stripped.endswith(':')
+            and len(stripped) < 50
+            and not stripped.startswith('-')
+        )
+
+        if is_banner:
+            flush()
+            doc_section(heading.lower())
+        elif is_section:
+            flush()
+            doc_section(stripped[:-1].lower())
+        else:
+            current.append(stripped)
+
+    flush()
+
+def _render_help_run(run):
+    """Render a successful HELP run as a readable help page."""
+    result = (run.get('results') or [{}])[0]
+    message = str(result.get('message') or '')
+    preview = str(result.get('preview') or '')
+
+    # Bare HELP should feel like the canonical Start Here page.
+    if 'Start Here help' in message:
+        from forge.extensions.linkos.pages.start_here import start_here_page
+        start_here_page()
+        return
+
+    doc_section('help')
+    spacer()
+    _render_help_preview_text(preview)
+
+    doc_tile_grid('safe next steps', [
+        ('🧭 ', 'Start Here', 'orientation', ('start-here',), 'success'),
+        ('🩺 ', 'Health', 'install check', ('install-health',), 'warning'),
+        ('📖 ', 'Docs', 'browse docs', ('docs',), 'accent'),
+        ('🏠 ', 'Home', 'LinkOS home', ('home',), 'success'),
+    ])
+
+    footer()
+
+
 def run_page(stamp=None):
     """Render one run."""
     run = _runs.load_run(stamp if stamp and stamp != 'latest' else None)
@@ -301,7 +382,27 @@ def run_page(stamp=None):
         reset()
         spacer()
         doc_text('No run manifest found for %s.' % stamp, tone='muted')
+        doc_text(
+            'The packet above may still be valid. This usually means LinkOS '
+            'could not find saved visual run details.',
+            tone='muted',
+        )
+        doc_text(
+            'Run HELP run-missing, start_here.py, or install_health.py if '
+            'you are unsure what happened.',
+            tone='warning',
+        )
+        doc_tile_grid('safe next steps', [
+            ('🧭 ', 'Start Here', 'orientation', ('start-here',), 'success'),
+            ('🩺 ', 'Health', 'install check', ('install-health',), 'warning'),
+            ('📖 ', 'Docs', 'browse docs', ('docs',), 'accent'),
+            ('🏠 ', 'Home', 'LinkOS home', ('home',), 'success'),
+        ])
         footer()
+        return
+
+    if _is_clean_single_help_run(run):
+        _render_help_run(run)
         return
 
     # Print order is intentional: details first, summary last, footer final.
