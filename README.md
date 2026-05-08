@@ -1,8 +1,8 @@
 # Forge
 
-Forge is a local AI development harness for Pythonista on iOS.
+Forge lets you pair-program with an AI assistant on your iPhone or iPad — without sending your code to a cloud agent or giving the assistant direct write access to your files.
 
-It lets an AI assistant help inspect, patch, run, and recover code on your device while you stay in control. The assistant writes a plain-text Forge bundle. You choose when to run it. Forge executes it locally and returns a run packet.
+Forge is a local AI development harness for Pythonista on iOS. The assistant writes a plain-text Forge bundle. You choose when to run it. Forge executes it locally and returns a run packet.
 
 The run packet is the source of truth.
 
@@ -20,6 +20,12 @@ Forge is different:
 - built for Pythonista on iPhone and iPad
 
 The assistant can suggest actions, but Forge only runs what you copy and execute.
+
+## Who this is for
+
+If you write code in Pythonista on iOS and want AI help that stays on your device, doesn't auto-execute, and keeps a recoverable audit trail of every change, Forge is for you.
+
+If you're on desktop with Cursor, Aider, or Claude Code, those tools are probably a better fit for your setup.
 
 ## The loop
 
