@@ -1,0 +1,32 @@
+# run_history
+
+## SUMMARY
+Run history is the user-facing memory of recent Forge work. It should hide test noise, show useful dev runs, and put the latest run near the bottom where Pythonista lands.
+
+## WHEN TO USE
+Use when checking what just happened, opening packet/raw output, auditing ops, or deciding what to do next.
+
+## DESIGN
+The Runs page is not a raw artifact browser. It is a user-facing work surface.
+
+It should show:
+- useful dev runs
+- status and op counts
+- the latest run clearly marked
+- Open, Audit, and Raw actions
+- footer controls back to Home and Docs
+
+It should hide:
+- test run spam
+- ephemeral child runs
+- low-value storage noise
+
+@forge-bundle open runs
+RUNS
+LIMIT: 10
+@end-forge-bundle
+
+## RELATED
+- surface_model — visual/action rules
+- the_loop — packet truth
+- safe_patch — recovery
