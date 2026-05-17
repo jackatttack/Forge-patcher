@@ -1,0 +1,54 @@
+# Surface model
+
+## SUMMARY
+
+Surface is the user-facing side of Forge.
+
+The packet remains the source of truth. Surface makes a run easier to skim, navigate, and act on.
+
+## WHEN TO USE
+
+Use Surface when a run would benefit from a clearer first view, focused pages, navigation controls, or copyable next actions.
+
+## MENTAL MODEL
+
+    packet = audit truth
+    Surface = readable command view
+
+A good Surface should answer:
+
+    What happened?
+    What matters?
+    What can I do next?
+
+## DESIGN RULES
+
+Every visible text element should serve one of three purposes:
+
+    information
+    navigation
+    action
+
+Do not hide failure. If a run failed, touched files, skipped work, or has recovery options, Surface should make that obvious.
+
+## COMMON PAGES
+
+- run summary
+- op list
+- file tree
+- source preview
+- help page
+- raw packet
+- run history
+
+@forge-bundle surface example
+
+SURFACE
+TITLE: Inspect files
+FOCUS: files.tree.0
+STACK: summary,files,ops,raw
+HERO: compact
+
+LIST_FILES .
+DEPTH: 2
+FILES: no
