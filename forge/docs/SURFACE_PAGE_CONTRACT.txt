@@ -1,0 +1,311 @@
+Forge Surface Page Contract
+===========================
+
+Status:
+Draft v0.1, extracted from Surface V2 work.
+
+Purpose
+-------
+
+A Forge run should not be treated as one long text blob.
+
+A run becomes a page stack:
+
+- summary page
+- ops page
+- raw packet page
+- errors/recovery page when needed
+- file tree pages
+- op-specific result pages
+- generic fallback result pages
+
+The renderer may currently print the full stack as plain text, but the data model
+must be strong enough for future renderers:
+
+- Pythonista console text
+- tappable LinkOS-style controls
+- WebView cards
+- iPad multi-panel dashboards
+- future native UI surfaces
+
+
+Page object
+-----------
+
+Current page shape:
+
+    {
+        'id': 'run_file.0',
+        'title': 'Run Output',
+        'kind': 'run_file',
+        'icon': '▶',
+        'short': 'Run Output',
+        'tone': 'success',
+        'mode': 'dense',
+        'size': 'compact',
+        'source': 'op:RUN_FILE',
+        'priority': 70,
+        'data': {...},
+        'controls': [...],
+        'promote': True,
+        'render_in_stack': True,
+    }
+
+Required fields:
+
+    id
+    title
+    kind
+
+Strongly recommended fields:
+
+    icon
+    short
+    tone
+    mode
+    size
+    source
+    priority
+    data
+
+Optional fields:
+
+    controls
+    promote
+    render_in_stack
+
+
+Page size
+---------
+
+Page size describes layout footprint. It is not the same as visual density.
+
+Allowed sizes:
+
+compact
+    Small result cards, run outputs, URL probes, tiny confirmations, and iPad side
+    panels.
+
+card
+    Medium panels. Useful for package health, compact docs summaries, and dashboard
+    tiles.
+
+full
+    Owns the normal phone-width vertical surface. Default for summary, ops, raw,
+    files, docs, and recovery pages.
+
+wide
+    For code, diffs, tables, graphs, and other content that benefits from more
+    horizontal space.
+
+dashboard
+    A composed multi-panel surface. Mostly for future iPad command-centre layouts.
+
+Current rule:
+Phone rendering may still show all pages vertically.
+Future iPad rendering may use size to place pages side-by-side.
+
+
+Page mode
+---------
+
+Mode describes visual density/style.
+
+Current modes are informal but should remain simple:
+
+dense
+    Compact technical output.
+
+compact
+    Summary-focused display.
+
+standard
+    Normal readable page.
+
+hero
+    Larger landing/intro page.
+
+Mode affects presentation.
+Size affects layout footprint.
+
+
+Standard pages
+--------------
+
+These pages should normally exist for a run:
+
+run.summary
+    The user-facing landing summary. Full size. Carries run-level action panels.
+
+run.ops
+    The operation/audit list. Full size.
+
+packet.raw
+    The raw packet escape hatch. Full size.
+
+run.errors
+    Present only when the run has parse/runtime errors. Full size.
+
+files.tree.N
+    Present for LIST_FILES results. Full size.
+
+Result pages
+------------
+
+Result pages come from either:
+
+1. op-local providers
+2. generic fallback pages
+
+Op-local providers live beside the package/op implementation:
+
+    forge_packages/core_ops/run_file/pages.py
+    forge_packages/core_ops/url/pages.py
+
+Provider function:
+
+    pages_for_result(result, index, run) -> list[page]
+
+Providers should return page objects using forge_core.surface.model.page.
+
+Current op-local pages:
+
+- RUN_FILE -> run_file.N
+- URL -> url.N
+
+Current fallback pages:
+
+- HELP -> help.N
+- PREVIEW -> preview.N
+- DIFF -> diff.N
+- AUDIT -> audit.N
+- other preview-bearing results -> result.N
+
+LIST_FILES does not create a fallback result page because it already creates
+files.tree.N.
+
+
+Controls
+--------
+
+Controls are structured data, not final UI.
+
+A page may carry control panels:
+
+    {
+        'id': 'run.copy',
+        'title': 'Actions',
+        'kind': 'copy',
+        'placement': 'bottom',
+        'priority': 50,
+        'source': 'core',
+        'controls': [...]
+    }
+
+Each control may contain:
+
+    id
+    label
+    route
+    action
+    value
+    icon
+    tone
+    kind
+    note
+    payload
+
+Current renderer prints controls as compact plain text and route hints.
+
+Future renderers may display the same controls as:
+
+- Pythonista tappable links
+- LinkOS pills
+- WebView buttons
+- iPad side rails
+- native UI buttons
+
+Important rule:
+Do not bake final UI assumptions into the control model.
+
+
+Bottom footer rule
+------------------
+
+Every useful surface should end with stable navigation.
+
+Reason:
+Pythonista console navigation is scroll-based and often lands near the bottom of
+fresh output.
+
+Current footer shape:
+
+    Home        Runs
+    Docs        Raw
+    run: <stamp>
+
+This is intentionally simple and should later become tappable.
+
+
+Ordering
+--------
+
+Page order is controlled by SURFACE stack intent.
+
+Default stack:
+
+    summary, ops, files, results, raw
+
+Aliases:
+
+    summary -> run.summary
+    home -> run.summary
+    ops -> run.ops
+    audit -> run.ops
+    files -> files.tree.0
+    raw -> packet.raw
+    packet -> packet.raw
+    errors -> run.errors
+    results -> all result pages
+    run_file -> run_file.0
+    url -> url.0
+    help -> help.0
+    preview -> preview.0
+    diff -> diff.0
+
+Unrequested pages are appended by priority so the surface remains complete.
+
+
+Design direction
+----------------
+
+The Surface should borrow LinkOS ideas, but not copy LinkOS wholesale.
+
+Keep:
+
+- page stack model
+- compact page identities
+- result pages as first-class objects
+- stable bottom controls
+- route/action data as structured objects
+- page size for future iPad layouts
+- package-owned domain surfaces
+
+Avoid:
+
+- hardcoded package routes in core
+- one-off action rows
+- renderer-specific data models
+- visual polish before contract stability
+- losing the raw packet escape hatch
+
+
+Next implementation targets
+---------------------------
+
+1. Add richer provider pages for HELP, PREVIEW, DIFF, AUDIT, SEARCH, and failure cases.
+2. Make individual pages renderable, not just listed and summarised.
+3. Convert route hints into real tappable Pythonista/LinkOS controls.
+4. Add a page index view.
+5. Add page cards suitable for iPad multi-panel rendering.
+6. Keep plain text as the fallback renderer.
