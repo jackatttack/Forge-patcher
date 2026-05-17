@@ -1,0 +1,165 @@
+Forge Preferred Write Ops
+=========================
+
+Purpose
+-------
+
+This document defines the preferred write surface for Forge.
+
+Forge should be smaller, clearer, and more user-friendly than Forge2. It should not carry forward every specialised old op as the main public interface if one safer, clearer op can cover the same job.
+
+Core editing model
+------------------
+
+The preferred editing loop is:
+
+1. SEARCH — find the area.
+2. READ/PREVIEW — understand what exists.
+3. INSERT — add without destroying.
+4. REPLACE — surgically change what exists.
+5. DELETE — remove what exists. Planned.
+6. RUN — test. Planned public alias for RUN_FILE.
+7. DIFF / REVERT_RUN — review or recover.
+
+Current preferred write ops
+---------------------------
+
+## 1. REPLACE
+
+Use REPLACE for surgical replacement.
+
+Best for:
+- replacing a function
+- replacing a method
+- replacing a class
+- replacing an assignment target
+- replacing explicit file line ranges
+- replacing exact old/new text blocks
+
+AST shape:
+
+    REPLACE app.py::main
+    BEGIN_BODY
+    def main():
+        return True
+    END_BODY
+
+Line range shape:
+
+    REPLACE docs/example.txt
+    LINES: 12-15
+    BEGIN_BODY
+    replacement text
+    END_BODY
+
+Exact block shape:
+
+    REPLACE docs/example.txt
+    BEGIN_OLD
+    old exact text
+    END_OLD
+    BEGIN_NEW
+    new exact text
+    END_NEW
+
+Why:
+REPLACE is the main surgical editing verb. It covers AST replacement, explicit line-range replacement, and exact old/new block replacement while keeping full-file overwrite separate.
+
+## 2. INSERT
+
+Use INSERT for adding code or text.
+
+Best for:
+- adding a sibling function or method before or after an AST target
+- adding code at the start or end of a function, method, or class body
+- inserting relative to an anchor inside an AST target
+- inserting plain text at a file line
+
+AST shape:
+
+    INSERT app.py::main
+    POSITION: end
+    BEGIN_BODY
+    print("done")
+    END_BODY
+
+Anchored AST shape:
+
+    INSERT app.py::main
+    ANCHOR: if ready:
+    POSITION: after
+    INDENT: child
+    BEGIN_BODY
+    run()
+    END_BODY
+
+Plain file shape:
+
+    INSERT docs/example.txt
+    LINE: 12
+    POSITION: after
+    BEGIN_BODY
+    new text
+    END_BODY
+
+Why:
+INSERT replaces a large family of overlapping insert ops with one mental model.
+
+## 3. REPLACE_FILE
+
+Use REPLACE_FILE for whole-file replacement.
+
+Best for:
+- small files
+- generated files
+- package manifests
+- docs where full replacement is clearer than surgical edits
+
+Shape:
+
+    REPLACE_FILE docs/example.txt
+    BEGIN_BODY
+    complete new file content
+    END_BODY
+
+Why:
+Whole-file replacement is sometimes the cleanest and least ambiguous edit, but it is powerful enough to keep explicit.
+
+REPLACE should stay surgical. REPLACE_FILE should mean overwrite the whole file.
+
+## 4. CREATE_FILE
+
+Use CREATE_FILE for new files and simple seed files in tests.
+
+Future direction:
+CREATE should likely become the friendlier public verb, with CREATE_FILE remaining as compatibility or an explicit file-only op.
+
+Compatibility / advanced ops
+----------------------------
+
+These remain useful but should no longer be the default vocabulary for ordinary editing:
+
+- REPLACE_FILE — still preferred for full-file overwrite.
+- DELETE — public deletion op for files, line ranges, and exact blocks.
+
+Safety expectations
+-------------------
+
+All mutating write ops should:
+- use project-root path safety
+- reject escaping paths
+- record touched files where recovery matters
+- support DIFF and REVERT_RUN
+- fail loudly rather than guessing
+- keep simple cases simple
+- allow complex cases through explicit readable syntax
+- provide excellent HELP and HINTS for LLM use
+
+Decision rule
+-------------
+
+If an edit replaces something surgically, use REPLACE.
+If an edit adds something, use INSERT.
+If an edit rewrites everything, use REPLACE_FILE.
+If an edit creates something new, use CREATE_FILE for now.
+If an edit removes something, use DELETE.
