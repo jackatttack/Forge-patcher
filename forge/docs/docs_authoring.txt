@@ -1,0 +1,42 @@
+# docs_authoring
+
+## SUMMARY
+Forge docs are plain .txt guides with sections, related links, and copyable Forge bundles.
+
+## WHEN TO USE
+Use when adding or editing documentation.
+
+## FORMAT
+Use this shape:
+
+    # doc_slug
+
+    ## SUMMARY
+    One short explanation.
+
+    ## WHEN TO USE
+    When this doc should be opened.
+
+    ## BODY SECTION
+    Normal prose, bullets, numbered lists, and code blocks.
+
+    ## RELATED
+    - other_slug — short reason
+
+## LINKS
+Use [[other_doc_slug]] to refer to another doc in prose. The current renderer keeps related docs as the main navigation, and inline links can become richer later.
+
+## COPYABLE BUNDLES
+Use Forge-native bundle fences:
+
+@forge-bundle example
+READ forge/docs/start_here.txt
+LINES: 1-40
+@end-forge-bundle
+
+The copy action copies only the bundle body and then re-renders the doc so the console remains navigable.
+
+## RELATED
+- start_here — docs entry point
+- surface_model — Surface rules
+- llm_guidance — agent guidance
