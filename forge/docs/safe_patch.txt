@@ -1,0 +1,41 @@
+# safe_patch
+
+## SUMMARY
+Small patches plus stored run packets make Forge safe. Branch before risk, inspect before editing, and recover from the packet rather than guessing.
+
+## WHEN TO USE
+Use before changing files, especially core files or anything that could break boot.
+
+## PATTERN
+1. Inspect the current file.
+2. Branch before a risky edit.
+3. Patch one concept.
+4. Run the smallest useful smoke test.
+5. Read the packet.
+6. Continue, repair, or revert.
+
+@forge-bundle safe inspect
+READ forge_entry.py::_render_route
+
+HELP REPLACE
+
+HELP INSERT
+@end-forge-bundle
+
+## CORE FILES
+Core/kernel files may require CONFIRM: yes. That is correct. Do not bypass the guard casually. Branch first, then confirm deliberately.
+
+## RECOVERY
+Use run history, diff, and revert tools.
+
+@forge-bundle recovery basics
+RUNS
+LIMIT: 10
+
+DIFF latest
+@end-forge-bundle
+
+## RELATED
+- the_loop — packet truth
+- run_history — stored runs
+- llm_guidance — agent rules
