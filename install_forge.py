@@ -11,18 +11,13 @@ Usage:
 3. Run it.
 
 The installer downloads the public GitHub repo zip, extracts it, and installs
-Forge into a clean local folder under Pythonista Documents.
+the repo's forge/ folder into Pythonista Documents.
 
 Default install folder:
 
-    ~/Documents/Forge
+    ~/Documents/forge
 
 Existing installs are backed up before replacement.
-
-This installs Forge in safe contained mode. Root launcher mode is optional and
-can be enabled later by running:
-
-    Forge/install_root_router.py
 """
 
 from __future__ import print_function
@@ -41,7 +36,7 @@ except Exception:
 
 
 REPO_ZIP_URL = 'https://github.com/jackatttack/Forge-patcher/archive/refs/heads/main.zip'
-INSTALL_DIR_NAME = 'Forge'
+INSTALL_DIR_NAME = 'forge'
 
 
 def _documents_root():
@@ -77,17 +72,28 @@ def _download(url, dest):
     print('Downloaded: %.2f KB' % (len(data) / 1024.0))
 
 
-def _find_repo_root(extract_dir):
+def _is_forge_folder(path):
+    return (
+        os.path.isdir(path)
+        and os.path.isfile(os.path.join(path, 'forge_entry.py'))
+        and os.path.isfile(os.path.join(path, 'AI_FIRST_BOOT.txt'))
+        and os.path.isfile(os.path.join(path, 'AI_MINIMAL_BOOT.txt'))
+        and os.path.isdir(os.path.join(path, 'forge_core'))
+        and os.path.isdir(os.path.join(path, 'forge_packages'))
+    )
+
+
+def _find_forge_folder(extract_dir):
     candidates = []
-    for name in os.listdir(extract_dir):
-        path = os.path.join(extract_dir, name)
-        if not os.path.isdir(path):
-            continue
-        if os.path.isfile(os.path.join(path, 'forge_entry.py')) and os.path.isdir(os.path.join(path, 'forge')):
-            candidates.append(path)
+
+    for root, dirs, files in os.walk(extract_dir):
+        if _is_forge_folder(root):
+            candidates.append(root)
+
     if not candidates:
-        raise RuntimeError('Could not find extracted Forge repo root.')
-    candidates.sort()
+        raise RuntimeError('Could not find forge/ folder in downloaded repo.')
+
+    candidates.sort(key=lambda p: (len(p), p))
     return candidates[0]
 
 
@@ -95,9 +101,9 @@ def install():
     docs = _documents_root()
     install_dir = os.path.join(docs, INSTALL_DIR_NAME)
     archive_dir = os.path.join(docs, 'archive')
-    backup_dir = os.path.join(archive_dir, 'Forge_before_install_' + _stamp())
+    backup_dir = os.path.join(archive_dir, 'forge_before_install_' + _stamp())
 
-    print('=== FORGE PUBLIC INSTALLER ===')
+    print('=== FORGE INSTALLER ===')
     print('Documents:', docs)
     print('Install folder:', install_dir)
     print('')
@@ -115,13 +121,13 @@ def install():
         with zipfile.ZipFile(zip_path, 'r') as z:
             z.extractall(extract_dir)
 
-        repo_root = _find_repo_root(extract_dir)
-        print('Found repo:', os.path.basename(repo_root))
+        source_forge = _find_forge_folder(extract_dir)
+        print('Found Forge folder:', source_forge)
 
         if os.path.exists(install_dir):
             _ensure_dir(archive_dir)
             print('')
-            print('Existing Forge install found.')
+            print('Existing forge install found.')
             print('Backing up to:', backup_dir)
             if os.path.exists(backup_dir):
                 _remove_tree(backup_dir)
@@ -129,23 +135,23 @@ def install():
 
         print('')
         print('Installing...')
-        _copy_tree(repo_root, install_dir)
+        _copy_tree(source_forge, install_dir)
 
         print('')
         print('Install complete.')
         print('')
         print('Next steps:')
         print('1. Open this file in Pythonista:')
-        print('   Forge/forge_entry.py')
+        print('   forge/forge_entry.py')
         print('2. Run it once.')
-        print('3. LinkOS should render at the bottom of the console.')
-        print('4. Open Forge/docs/AI_FIRST_BOOT.txt and paste it into an LLM.')
+        print('3. Copy one of these into a fresh AI chat:')
+        print('   forge/AI_FIRST_BOOT.txt')
+        print('   forge/AI_MINIMAL_BOOT.txt')
         print('')
         print('Optional later:')
-        print('Run Forge/install_root_router.py if you want tappable LinkOS buttons')
-        print('and wider Pythonista Documents workspace access.')
+        print('Run forge/install_root_router.py if you want a root Shortcut target:')
+        print('   pythonista3://forge_entry.py?action=run')
         print('')
-        print('Contained mode is safe and works without root router.')
 
         return True
 
