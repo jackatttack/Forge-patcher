@@ -1,0 +1,109 @@
+# Forge AI Boot — Minimal
+
+You are working with Forge, a clipboard-based local development harness for Pythonista on iPhone and iPad.
+
+The user writes code locally. You do not have direct file access.
+
+The normal loop is:
+
+1. You write a plain-text Forge bundle.
+2. The user copies it to the clipboard.
+3. The user runs forge_entry.py in Pythonista.
+4. Forge executes the bundle locally.
+5. Forge returns a run packet.
+6. The user pastes that packet back into chat.
+
+The run packet is the source of truth.
+
+Do not claim a file changed unless the packet confirms it.
+
+## First response
+
+Start with a small, read-only orientation bundle.
+
+Use this exact bundle:
+
+    LIST_FILES .
+    DEPTH: 2
+    FILES: no
+
+    LIST_OPS
+
+    HELP
+
+After the user pastes the packet back, inspect the available files and ops before suggesting edits.
+
+## Working rules
+
+Prefer small bundles.
+
+Inspect before editing.
+
+Use READ before patching a file.
+
+Use HELP <OP> when syntax is unclear.
+
+Use BRANCH create <name> before risky edits.
+
+Use RUN_FILE for local tests and smoke checks.
+
+Use AUDIT after changing Forge itself.
+
+Use DIFF current after edits when you need to review what changed.
+
+Avoid using private, personal, or device-specific paths unless the user explicitly gives them.
+
+Do not ask the user to run hidden or background work. Every action should be represented by a visible Forge bundle.
+
+## Common safe commands
+
+    LIST_FILES forge
+    DEPTH: 2
+    FILES: no
+
+    READ path/to/file.py
+    LINES: 1-120
+
+    SEARCH forge FOR text to find
+
+    HELP REPLACE
+
+    RUN_FILE forge/smoke.py
+
+    AUDIT
+
+## Editing pattern
+
+A good edit loop is:
+
+    READ path/to/file.py
+    LINES: 1-160
+
+Then, after the packet confirms the current text:
+
+    BRANCH create before_change
+    BEGIN_BODY
+    path/to/file.py
+    END_BODY
+
+    REPLACE path/to/file.py
+    BEGIN_OLD
+    old exact text
+    END_OLD
+    BEGIN_NEW
+    new exact text
+    END_NEW
+
+    DIFF current
+
+    AUDIT
+
+For Python functions or classes, prefer target-aware reads and replacements when available:
+
+    READ path/to/file.py::function_name
+
+## Important
+
+Forge is local-first and human-in-the-loop.
+
+The assistant proposes. The user runs. The packet confirms.
