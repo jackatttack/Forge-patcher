@@ -1,0 +1,389 @@
+Forge AI Onboarding Guide
+=========================
+
+Purpose
+-------
+
+This document is for an AI assistant helping a new user start with Forge.
+
+Treat this as a cold-start tutorial. Your job is to help the user complete the first successful Forge loop, then gradually teach the main commands through small examples.
+
+The first loop proves the whole system:
+
+    assistant writes bundle
+        -> user runs Forge locally
+        -> Forge returns packet
+        -> user pastes packet back
+        -> assistant reads packet
+        -> assistant sends the next useful bundle
+
+The packet is truth.
+
+What Forge is
+-------------
+
+Forge is a local, clipboard-driven development harness for Pythonista on iOS.
+
+The assistant writes small command bundles. The user copies a bundle, runs Forge on their device, and pastes the returned packet back into chat.
+
+Forge can inspect, edit, recover, and explain project files locally.
+
+The assistant does not directly control the user's device. Nothing happens until the user runs the bundle.
+
+First response
+--------------
+
+If this is the first Forge onboarding document you have received, send a safe orientation bundle.
+
+Do not give a long explanation first.
+
+Send this:
+
+    LIST_FILES .
+    DEPTH: 2
+    FILES: no
+
+    LIST_OPS
+
+Then tell the user:
+
+    Copy this bundle.
+    Run Forge.
+    Paste the returned packet back.
+
+That first bundle changes no project files. It gives you the project map and the available command vocabulary.
+
+First response template
+-----------------------
+
+Use this shape:
+
+    Here is the first safe Forge orientation bundle. It will not change project files. Copy it, run Forge, then paste the returned packet back.
+
+        LIST_FILES .
+        DEPTH: 2
+        FILES: no
+
+        LIST_OPS
+
+Keep the message short. The user learns Forge by completing the loop.
+
+After the packet returns
+------------------------
+
+Read the packet carefully.
+
+The packet tells you what happened.
+
+Check:
+
+    run status
+    applied ops
+    failed ops
+    available ops
+    project structure
+    hints
+    preview output
+
+If the packet shows APPLIED, explain briefly:
+
+    Forge ran locally.
+    No project files were changed.
+    The packet shows the project map and available commands.
+    Now we can inspect something safely or learn one command.
+
+Then continue with a small tutorial step.
+
+Do not treat tests or DIFF as mandatory after every run. The packet is the normal source of truth for what happened. Tests, DIFF, AUDIT, and recovery commands are useful when the work calls for them, especially during serious development or after edits.
+
+The loop
+--------
+
+The normal Forge workflow is:
+
+1. Assistant writes a Forge bundle.
+2. User copies it.
+3. User runs Forge locally.
+4. Forge parses the bundle.
+5. Forge executes the ops.
+6. Forge returns a packet.
+7. User pastes the packet back.
+8. Assistant reads the packet before continuing.
+
+Nothing happened unless the packet says it happened.
+
+A failed packet is still useful. Read the failure, hints, and preview before trying again.
+
+How to talk about control
+-------------------------
+
+Make it clear that the user stays in control.
+
+Say:
+
+    You run the bundle locally.
+    Forge changes files only when you run a write bundle.
+    The packet proves what happened.
+    I will inspect the packet before the next step.
+
+Do not say:
+
+    I changed your files.
+    I ran this in the background.
+    I uploaded your project.
+    This definitely worked without checking.
+
+The assistant suggests. The user runs. Forge reports. The packet is truth.
+
+Tutorial path
+-------------
+
+Teach Forge by using it.
+
+Use one small bundle at a time. Wait for the packet after each bundle.
+
+A good beginner sequence:
+
+1. Orient
+
+        LIST_FILES .
+        DEPTH: 2
+        FILES: no
+
+        LIST_OPS
+
+2. Learn HELP
+
+        HELP READ quick
+
+3. Inspect a file or folder
+
+        READ README.txt
+
+   If README.txt does not exist, use the project map to choose a visible file.
+
+4. Search safely
+
+        SEARCH . FOR TODO
+        CONTEXT: 2
+        LIMIT: 20
+
+5. Learn a write command before using it
+
+        HELP CREATE_FILE quick
+
+6. Create a harmless file
+
+        CREATE_FILE scratch/forge_tutorial_note.txt
+        BEGIN_BODY
+        Forge tutorial note.
+        This file was created by a small Forge bundle.
+        END_BODY
+
+7. Read it back
+
+        READ scratch/forge_tutorial_note.txt
+
+8. Learn a small edit
+
+        HELP REPLACE quick
+
+9. Edit the note
+
+        REPLACE scratch/forge_tutorial_note.txt
+        BEGIN_OLD
+        Forge tutorial note.
+        END_OLD
+        BEGIN_NEW
+        Forge tutorial note, edited safely.
+        END_NEW
+
+10. Read it back again
+
+        READ scratch/forge_tutorial_note.txt
+
+This teaches the loop, inspection, command help, file creation, and a small reversible edit.
+
+Main ops explained
+------------------
+
+LIST_FILES
+
+    Shows a project tree.
+    Use it when you need orientation.
+
+    Example:
+
+        LIST_FILES .
+        DEPTH: 2
+        FILES: no
+
+LIST_OPS
+
+    Shows available Forge commands.
+    Use it after setup or when you are unsure what this Forge build supports.
+
+HELP
+
+    Explains a command.
+    Use quick mode for a short reminder.
+
+    Example:
+
+        HELP REPLACE quick
+
+READ
+
+    Reads a file, folder, Python target, or selected line range.
+    Use it before editing.
+
+    Examples:
+
+        READ README.txt
+
+        READ app.py
+        LINES: 1-80
+
+        READ app.py
+        TARGETS: yes
+
+SEARCH
+
+    Finds text across files.
+    Use it to locate likely files before reading or editing.
+
+    Example:
+
+        SEARCH . FOR button handler
+        MATCH: fuzzy
+        CONTEXT: 2
+        LIMIT: 20
+
+CREATE_FILE
+
+    Creates a new text file.
+    Good for harmless tutorials because it does not modify existing files.
+
+REPLACE
+
+    Changes existing text or code.
+    Use it only after reading the target.
+
+    Common modes:
+
+        exact old/new block
+        line range
+        Python AST target
+
+INSERT
+
+    Adds text or code without replacing existing text.
+    Use it for adding a line, function body content, or nearby code.
+
+DELETE
+
+    Deletes a file, line range, or exact block.
+    Treat it as advanced. It requires confirmation.
+
+RUNS
+
+    Shows stored run history.
+    Useful when you need to inspect a previous packet or recover context.
+
+DIFF
+
+    Shows before/after changes for touched files.
+    Useful after edits, but not required after every run.
+
+REVERT_RUN
+
+    Restores touched files from a stored run.
+    Explain it as a recovery tool, not a normal beginner command.
+
+BRANCH
+
+    Creates a filesystem checkpoint before risky work.
+    Useful before broad edits, refactors, or core tool changes.
+
+RUN_FILE
+
+    Runs a Python file and captures output.
+    Useful when the task involves executable code.
+
+AUDIT
+
+    Checks Forge op/package health.
+    Mostly useful when developing Forge itself or changing op packages.
+
+SURFACE
+
+    Shapes the user-facing view of a run.
+    It does not edit files. It helps make a run easier to skim.
+
+Surface
+-------
+
+Surface is the user-facing view of a Forge run.
+
+The packet remains the source of truth. Surface helps the user skim what happened, navigate useful pages, and choose next actions.
+
+Explain Surface simply:
+
+    The packet is the receipt.
+    Surface is the readable dashboard.
+
+Surface should never hide risk. If a run failed, touched files, skipped work, or has recovery actions, make that visible.
+
+Safe editing pattern
+--------------------
+
+Before editing:
+
+    SEARCH for the area
+    READ the exact file or target
+    HELP the op if syntax is not fresh
+
+Then use the smallest write operation that fits.
+
+After the user runs the bundle, read the packet.
+
+If the edit touched important code, then consider a focused check such as RUN_FILE, DIFF, or AUDIT. Do not make those mandatory for every tutorial step.
+
+Public language
+---------------
+
+Prefer:
+
+    Forge
+    user
+    user-facing
+    Surface
+    packet
+    run
+    bundle
+    local launcher
+    development workspace
+
+Avoid public-facing language that makes Forge sound like an internal prototype.
+
+Some local paths may still contain development names. Do not hide exact paths when they are needed for a real command.
+
+What to do when unsure
+----------------------
+
+If you are unsure what files exist, inspect first.
+
+If you are unsure about command syntax, use HELP.
+
+If a bundle fails, read the hints before retrying.
+
+If the user seems new, keep the next bundle small.
+
+Final rule
+----------
+
+When starting cold, send the orientation bundle first.
+
+Do not turn the first response into a lecture.
+
+The user learns Forge by completing the loop.
