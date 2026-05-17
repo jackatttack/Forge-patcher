@@ -1,0 +1,183 @@
+forge_reboot command language
+=============================
+
+Status
+------
+
+Draft v0.3.
+
+Purpose
+-------
+
+Forge bundles should stay structured, but common commands should feel natural to write.
+
+The reboot keeps the op/directive/block model, but supports a small command-language layer on top.
+
+The goal is not to make Forge vague. The goal is to make simple things simple, while keeping complex bundles explicit and readable.
+
+Core rule
+---------
+
+This:
+
+    HELP SURFACE
+
+is equivalent to:
+
+    HELP
+    ARGS: SURFACE
+
+For ops with SPEC target_kind none, any same-line text after the op name becomes ARGS unless ARGS is already supplied.
+
+For path/file/AST ops, same-line text remains the target:
+
+    LIST_FILES forge
+    PREVIEW path/to/file.py
+    REPLACE file.py::function_name
+
+Structured blocks
+-----------------
+
+Forge supports structured block markers.
+
+Current parser block specs:
+
+    BEGIN_BODY
+    ...
+    END_BODY
+
+    BEGIN_OLD
+    ...
+    END_OLD
+
+    BEGIN_NEW
+    ...
+    END_NEW
+
+The parser stores these as structured fields.
+
+BODY is the standard replacement/creation/insertion body.
+
+OLD and NEW are used by readable exact-block replacement:
+
+    REPLACE docs/example.txt
+    BEGIN_OLD
+    old exact text
+    END_OLD
+    BEGIN_NEW
+    new exact text
+    END_NEW
+
+This is intentionally more readable than hiding OLD and NEW inside BEGIN_BODY.
+
+Parser principle
+----------------
+
+The parser should produce one canonical structure:
+
+    op
+    target
+    directives
+    body
+    blocks
+
+Command sugar should compile into that structure early.
+
+Ops should then decide their mode from:
+- target shape
+- directives
+- structured blocks
+
+Examples:
+
+    REPLACE app.py::main
+    BEGIN_BODY
+    ...
+    END_BODY
+
+means AST replacement because the target contains ::.
+
+    REPLACE docs/example.txt
+    LINES: 12-15
+    BEGIN_BODY
+    ...
+    END_BODY
+
+means explicit line-range replacement because LINES is present.
+
+    REPLACE docs/example.txt
+    BEGIN_OLD
+    old
+    END_OLD
+    BEGIN_NEW
+    new
+    END_NEW
+
+means exact block replacement because OLD and NEW blocks are present.
+
+Help modes
+----------
+
+HELP is intentionally layered.
+
+The default HELP should be rich enough for an LLM to use the op safely:
+
+    HELP REPLACE
+
+It should show practical usage, syntax shapes, directives, blocks, examples, common failures, and related ops.
+
+Quick help should be opt-in:
+
+    HELP REPLACE quick
+
+Full help can include README and package details:
+
+    HELP REPLACE full
+    HELP REPLACE --full
+    HELP
+    ARGS: REPLACE
+    MODE: full
+
+Contract help shows conformance/debug state:
+
+    HELP REPLACE contract
+    HELP REPLACE --contract
+    HELP
+    ARGS: REPLACE
+    MODE: contract
+
+Why this matters
+----------------
+
+Same-line args make the system nicer for Jack to write by hand, especially on iPhone.
+
+Structured blocks make complex edits readable to both humans and LLMs.
+
+Layered HELP makes the system better for LLMs: rich when writing bundles, quick when reminding, detailed when learning architecture, strict when checking contracts.
+
+Design direction
+----------------
+
+    ops are primitives
+    aliases are daily vocabulary
+    packages are capability units
+    surfaces are user-facing rendering intent
+    structured docs are renderable help
+
+The public language should move toward:
+
+    SEARCH
+    READ
+    CREATE
+    INSERT
+    REPLACE
+    DELETE
+    MOVE
+    COPY
+    RUN
+    HELP
+    BRANCH
+    DIFF
+    MEMORY
+
+Existing narrow ops can remain as compatibility or sharp tools while the preferred syntax becomes simpler and smarter.
