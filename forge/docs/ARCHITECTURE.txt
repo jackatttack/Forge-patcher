@@ -1,0 +1,106 @@
+Forge architecture
+==================
+
+Status
+------
+
+Initial vertical slice is working.
+
+Old Forge is being used to build a cleaner Forge workspace in:
+
+    forge/
+
+This reboot is isolated from forge2. It is not trying to reach feature parity yet. It exists to prove the architecture shape before migration.
+
+Core principle
+--------------
+
+Forge Core produces structured truth.
+Surface pages render structured truth.
+Packages declare capabilities.
+The clipboard is one transport, not the architecture.
+Testing/dev mode must work without clipboard.
+
+Current working flow
+--------------------
+
+    bundle text
+        -> forge_core.parser.parse_bundle()
+        -> forge_core.engine.execute_ops()
+        -> structured run dict
+        -> forge_core.run_storage.write_run()
+        -> LLM packet renderer
+        -> Surface renderer
+
+Current files
+-------------
+
+    entry.py
+        Movable dev entry point.
+
+    smoke.py
+        Public install smoke probe.
+
+    surface_smoke.py
+        Public Surface rendering smoke probe.
+
+    forge_core/
+        parser.py
+        engine.py
+        models.py
+        registry.py
+        renderers.py
+        runner.py
+        run_storage.py
+
+    forge_packages/core_ops/
+        audit/
+        help/
+        list_files/
+        list_ops/
+        runs/
+        surface/
+
+What is proven
+--------------
+
+1. No-clipboard dev/test execution works.
+2. Runs are structured dicts, not just strings.
+3. Runs are written to durable artifacts.
+4. LLM packet and Surface output are rendered from the same run object.
+5. Core ops can be package-shaped folders.
+6. SURFACE can intentionally shape the user-facing page stack.
+7. RUNS can inspect stored run artifacts.
+8. AUDIT can check the reboot's own op contract health.
+9. Tests can assert behaviour directly.
+
+Current status
+--------------
+
+The public smoke checks pass.
+
+Latest known passing commands:
+
+    RUN_FILE forge/smoke.py
+
+    RUN_FILE forge/surface_smoke.py
+
+Next architectural target
+-------------------------
+
+Give every op package a stronger contract:
+
+    forge_packages/core_ops/<op_name>/
+        op.py
+        README.txt
+        manifest.py or package.py
+
+Then teach AUDIT to check:
+- folder shape
+- README presence
+- SPEC validity
+- HELP summary
+- validate/execute callability
+- manifest consistency
+
+After that, the reboot can grow a real package registry, then migrate selected forge2 core behaviour deliberately.
