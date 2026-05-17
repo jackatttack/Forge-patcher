@@ -1,0 +1,478 @@
+Forge Op Development Guide
+=================================
+
+Status:
+Draft v0.1, codifying op + Surface patterns proven in Forge2 and
+refined for the current Forge architecture.
+
+Purpose
+-------
+
+An op in the reboot is not just an executable command. It is a small,
+self-contained package that owns:
+
+    - its execution
+    - its discovery metadata
+    - its user-readable explanation
+    - (optionally) its Surface rendering
+
+This document is the complete contract. A new op is built by following
+it; an existing op is improved by filling in the optional layers.
+
+The cardinal rule
+-----------------
+
+Adding an op should be simple. Adding a page for an op should be simple.
+Adding either should require zero edits outside the op's own package
+directory. Auto-discovery does the wiring.
+
+If you find yourself editing a registry, a dispatch table, or a routing
+file to add an op or a page, the reboot has a bug. Fix the bug, not the
+contract.
+
+Package shape
+-------------
+
+Every op lives at:
+
+    forge_packages/core_ops/<op_name>/
+
+Required files:
+
+    op.py
+        Executable. SPEC, HELP, validate(), execute().
+
+    manifest.py
+        MANIFEST dict. Machine-readable metadata.
+
+    README.txt
+        User/LLM-facing explanation of what the op does and why.
+
+Optional files:
+
+    pages.py
+        Surface rendering. See "The Surface" below.
+
+    helpers.py
+        Internal implementation helpers.
+
+    smoke.py
+        Optional package smoke probe.
+
+    tests.py
+        Optional op-specific tests for development builds.
+
+    fixtures/
+        Test data.
+
+    docs/
+        Additional package documentation.
+
+The op contract
+---------------
+
+op.py must expose four names:
+
+    SPEC               execution metadata
+    HELP               documentation surface
+    validate(parsed_op) -> list[str]
+    execute(ctx, parsed_op, result) -> None
+
+SPEC required keys:
+
+    name
+    target_kind
+    body_mode
+    allowed_directives
+    required_directives
+
+HELP required keys:
+
+    summary
+
+HELP strongly recommended keys:
+
+    subject
+    common_failures
+    safe_usage
+    minimal_example
+    related_ops
+
+HELP optional keys:
+
+    directives
+
+Optional op.py attributes:
+
+    HINTS
+        Runtime or validation help.
+
+The manifest contract
+---------------------
+
+manifest.py must expose MANIFEST.
+
+MANIFEST required keys:
+
+    name
+        lower snake. Matches the package folder.
+
+    op
+        upper snake. Matches SPEC['name'].
+
+    kind
+        normally 'core-op'.
+
+    version
+        semver-ish string.
+
+    summary
+        one-line description.
+
+MANIFEST optional keys:
+
+    required
+        bool. Required for the reboot kernel.
+
+    risk
+        read-only | mutating | execution | recovery | render-control
+
+    domains
+        list of domain tags.
+
+    status_codes
+        list of statuses the op may emit.
+
+    provides_pages
+        list of page ids the op contributes to the Surface.
+
+    requires
+        list of package/op dependencies.
+
+The Surface
+===========
+
+The Surface is the *optional but powerful* second life of an op.
+A raw run packet is the audit truth. The Surface is what makes a
+run feel like a UI.
+
+An op participates in the Surface by adding pages.py to its
+package. pages.py is optional. An op without pages.py still works
+perfectly — it falls back to generic rendering. But an op with pages.py
+gets to own how it appears to the user.
+
+pages.py may expose two functions, both optional:
+
+    pages_for_result(result, index, run) -> list[page]
+        Inline result pages shown in the run stack alongside other ops.
+
+    render_detail(page, context) -> None
+        Full-surface detail page reached by tapping the op in the run
+        audit. This is the op's main user-facing Surface.
+
+Either or both may be present. Missing functions fall back to generic
+rendering. The op's execution does not depend on pages.py — a buggy
+pages.py never breaks the audit or the run packet.
+
+pages_for_result
+----------------
+
+Called once per op result during page-stack assembly. Returns a list of
+page objects (most ops return zero or one).
+
+Use this for compact inline cards in the run stack. Examples:
+
+    RUN_FILE      -> a card with exit code and stdout summary
+    URL           -> a card with status, mode, and preview
+
+Page object shape:
+
+    page(
+        '<op_lower>.%N',
+        '<Title>',
+        kind='<kind>',
+        icon='<icon>',
+        short='<short label>',
+        tone='accent' | 'success' | 'warning' | 'danger' | 'muted',
+        mode='dense',
+        size='compact',
+        source='op:<OP_NAME>',
+        priority=70,
+        data={...},
+    )
+
+Use '%N' in the id; the dispatcher numbers them automatically across
+multiple op results in one run.
+
+render_detail
+-------------
+
+Called when the user opens an op's detail page (audit -> op.detail.N).
+Receives the page object and a context dict.
+
+Signature:
+
+    def render_detail(page, context=None):
+        ...
+
+The page object's data field contains:
+
+    stamp        run stamp
+    run          full run object
+    index        op result index
+    result       the op result dict
+    back_page    where Back should land
+
+The context dict carries route resolution:
+
+    back_page    overrides page.data.back_page
+    run_stamp    run id
+    params       dict of key=value route args (see "Pill controls")
+
+The renderer should print directly to stdout. No return value.
+
+The cardinal page contract
+--------------------------
+
+Every detail page must:
+
+    1. Start with a hero.
+       Op name. Status. Subtitle.
+
+    2. Show the relevant information densely.
+       Use doc_section to separate logical blocks.
+       Use pill_rows for tappable chips.
+
+    3. End with stable bottom controls.
+       Back · Raw · Copy · Home · (optional README link)
+
+    4. Never end on a state-changing control.
+       Pythonista lands near the bottom of fresh output. If the last
+       row is "filter: py", the user loses their navigation footing.
+
+    5. Re-render in place when its own pills are tapped.
+       Pills that re-parameterise the detail page must route back to
+       the same op.detail.N, not bounce the user to a different page.
+
+Pill controls
+-------------
+
+Pills are the workhorse tappable. Use them for:
+
+    - re-parameterising the current detail page (depth, filter, mode)
+    - jumping to related surfaces (README, Raw, Home)
+    - drill-down into list items
+
+The pill route shape is a tuple:
+
+    ('run_page', stamp, page_id, *trailing_tokens)
+
+Trailing tokens are positional. Two kinds are recognised by the
+runtime:
+
+    key=value     route param. Lands in context['params'][key].
+    other         back_page hint. Lands in context['back_page'].
+
+Example. A LIST_FILES detail page renders a depth-3 pill as:
+
+    pill_link(
+        '3',
+        'run_page', stamp, page_id,
+        'depth=3',
+        tone='accent',
+    )
+
+Tapping that pill re-renders the same detail page with
+context['params']['depth'] == '3'. The renderer reads the param and
+slices the captured tree to depth 3.
+
+If the param matches the current value, render the pill with a
+distinct tone (e.g. 'success') so the user can see what's active.
+
+Bottom control strip
+--------------------
+
+Every detail page ends with the same shape of bottom controls.
+Use tile_dock or pill_rows depending on density.
+
+Standard controls:
+
+    ⬅️  Back     -> back_page or landing
+    📦  Raw      -> packet.raw
+    📋  Copy     -> copy_packet
+    🏠  Home     -> home
+
+Optional additions:
+
+    📖  README   -> the op's own README.txt rendered as a page
+
+The bottom strip is the only state-stable thing on the page. Users
+should always have a known route home from anywhere.
+
+README surfacing
+----------------
+
+Every op package has a README.txt. The detail page should expose a
+link to it as part of the bottom strip or as a section above the
+bottom controls.
+
+The README is the op's identity as an object. Tapping it should
+render the README content in a clean reader view.
+
+Result page IDs
+---------------
+
+Pages produced by pages_for_result use '%N' placeholders. The
+dispatcher rewrites them per-run:
+
+    'run_file.%N'  -> 'run_file.0', 'run_file.1', ...
+    'url.%N'       -> 'url.0', 'url.1', ...
+
+The op.detail.N pages are produced by core, not by pages.py. The
+detail route is always op.detail.<result_index>.
+
+Truncation
+----------
+
+Information-dense pages must truncate aggressively. A LIST_FILES
+result that scanned 800 files should not print 800 lines. Show the
+first ~50, then `…  N more`, then a pill to expand.
+
+Rules:
+
+    - default truncate at 50 entries per logical group
+    - show count of hidden items
+    - offer an expand pill that re-renders with no limit
+    - never hide things silently
+
+Object pages
+------------
+
+Some pages are not about an op — they are about a thing.
+A file page. A package page. A target page.
+
+These do not yet have a contract in the reboot. They will eventually
+live at:
+
+    forge_core/surface/objects/<object_type>_page.py
+
+When they exist, op pages may emit routes that link to them. Until
+then, op pages may display file paths or package names as plain text.
+Do not invent placeholder routes.
+
+Auto-discovery
+--------------
+
+The dispatcher finds pages.py automatically. There is no registry.
+Adding an op with a page is:
+
+    1. Create forge_packages/core_ops/<op_name>/
+    2. Add op.py, manifest.py, README.txt
+    3. (optionally) add pages.py with pages_for_result and/or render_detail
+
+That is the full procedure. No further wiring exists. No further wiring
+should be added.
+
+Render primitives
+-----------------
+
+The reboot ships a stable set of render primitives. Use these. Do not
+reach across packages for renderers.
+
+    forge_core.surface.render.docpage
+        doc_hero, doc_section, doc_text, doc_link, doc_output
+
+    forge_core.surface.render.pills
+        pill_link, pill_rows
+
+    forge_core.surface.render.footer
+        footer
+
+    forge_core.surface.render.tile_dock
+        tile_dock
+
+    forge_core.surface.render.primitives
+        colour, reset, say, spacer, band
+
+Render primitives degrade gracefully when not available. Detail
+pages should fall back to plain print() if any primitive import
+fails.
+
+Failure handling
+----------------
+
+A page provider that raises does not break the run.
+
+For pages_for_result:
+    Dispatcher catches the exception, emits a surface-error page in
+    its place, run continues.
+
+For render_detail:
+    Detail route catches the exception, prints a one-line failure
+    note, falls back to the generic detail body.
+
+This is intentional. The audit trail is sacred. A buggy renderer
+should never make a run unreviewable.
+
+Examples
+========
+
+Minimal op without a page
+-------------------------
+
+    forge_packages/core_ops/example/
+        op.py
+        manifest.py
+        README.txt
+
+The op runs. Audit row routes to a generic op.detail page. Result
+page is a generic preview card if the op set result['preview'].
+
+Op with an inline result card
+-----------------------------
+
+Add pages.py with pages_for_result. See run_file/pages.py for the
+reference.
+
+Op with a rich detail page
+--------------------------
+
+Add pages.py with render_detail. See list_files/pages.py for the
+reference (once it lands).
+
+Op with both
+------------
+
+pages.py exposes both functions. They share helpers. Both fall back
+independently if absent.
+
+Migration from Forge2 plugin-style ops
+---------------------------------------
+
+Forge2 packages contribute pages via plugin manifests:
+
+    LINKOS_PLUGIN = {
+        'pages': {...},
+        'op_surfaces': {...},
+    }
+
+The reboot does not use this. Each op owns its own pages.py. Packages
+that ship multiple ops have one pages.py per op.
+
+Migration pattern:
+
+    1. Move the per-op render function out of the plugin
+    2. Place it in pages.py next to op.py as render_detail
+    3. Drop the plugin contribution
+    4. Verify auto-discovery picks it up
+
+Forge's cohesion principle: an op's behaviour, help, and Surface
+pages live in one folder. A change to how the op renders should
+not require editing a separate plugin file.
+
+Related contracts
+-----------------
+
+    OP_PACKAGE_CONTRACT.txt    package shape
+    SURFACE_PAGE_CONTRACT.txt  page object and render contract
+    PREFERRED_WRITE_OPS.txt    op family decisions
