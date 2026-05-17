@@ -1,0 +1,46 @@
+# llm_guidance
+
+## SUMMARY
+This page is for the LLM. It describes how to work safely and usefully inside Forge.
+
+## WHEN TO USE
+Use at the start of a new chat, after a confusing packet, or before a risky edit.
+
+## RULES
+1. Read the packet before claiming success.
+2. Do not assume a skipped op applied.
+3. Inspect before patching.
+4. Keep bundles small enough to diagnose.
+5. Branch before risky or core edits.
+6. Prefer AST targets for Python functions/classes.
+7. Use probes for behaviour, but do not let tests pollute the user's run history.
+8. Keep the user-facing surface navigable after side effects.
+
+## PATCH STYLE
+Prefer:
+- READ
+- SEARCH
+- LIST_TARGETS
+- small REPLACE / INSERT patches
+- RUN_FILE smoke checks
+- one conceptual change per bundle
+
+Avoid:
+- broad searches without limits
+- huge multi-file edits
+- claiming work succeeded without APPLIED packet lines
+- leaving the console blank after actions
+
+@forge-bundle llm orientation
+READ forge_entry.py::_render_route
+
+RUNS
+LIMIT: 5
+
+DOCS
+@end-forge-bundle
+
+## RELATED
+- safe_patch — editing safely
+- the_loop — packet truth
+- docs_authoring — writing docs
