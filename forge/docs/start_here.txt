@@ -1,0 +1,33 @@
+# Start here
+
+## SUMMARY
+
+Forge is a local, packet-driven development loop for Pythonista on iOS.
+
+The assistant writes a bundle. The user runs it locally. Forge returns a packet. The packet is the source of truth.
+
+## FIRST THINGS TO READ
+
+Read [[the_loop]] to understand the basic workflow.
+Read [[safe_patch]] before changing important files.
+Read [[run_history]] for stored runs and recovery.
+Read [[surface_model]] for the user-facing run view.
+Read [[llm_guidance]] for assistant behaviour.
+Read [[AI_ONBOARDING]] when preparing public onboarding or teaching a new user.
+
+## USEFUL DOCS
+
+- the_loop — bundle, run, packet, next move
+- safe_patch — patch safety
+- run_history — stored runs
+- surface_model — Surface and user-facing pages
+- llm_guidance — assistant rules
+- AI_ONBOARDING — public onboarding guide for AI assistants
+
+@forge-bundle orient
+
+LIST_FILES .
+DEPTH: 2
+FILES: no
+
+LIST_OPS
