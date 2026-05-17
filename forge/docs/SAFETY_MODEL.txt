@@ -1,0 +1,80 @@
+Forge Safety Model
+==================
+
+Purpose
+-------
+Forge must preserve the safety guarantees that made Forge2 usable as an AI patching harness.
+
+The core rule:
+A failed op must not partially apply its own mutation.
+
+This does not mean the whole bundle is transactional. A bundle is still an ordered sequence of ops. Earlier successful ops may already have applied, and later ops may still run unless a future STOP_ON_FAIL / transaction mode is added.
+
+Required safety behaviour
+-------------------------
+
+1. Parse/shape validation happens before execute()
+If an op is invalid, its execute() function must not run.
+
+Examples:
+- CREATE_FILE without body must not create a file.
+- REVERT_RUN without a stamp must not run.
+- Unknown ops must not call any package code.
+
+2. Mutating ops record recovery metadata
+Every mutating op must write enough touched-file metadata for DIFF and REVERT_RUN.
+
+For files, touched metadata should include:
+- rel
+- kind
+- existed_before
+- before
+- after
+
+If existed_before is false, REVERT_RUN deletes the file.
+If existed_before is true, REVERT_RUN restores the previous content.
+
+3. Paths must stay inside project root
+All file mutation ops must reject escaping or absolute-danger paths.
+
+4. Destructive ops require explicit confirmation
+DELETE, directory deletion, branch restore, and similar destructive actions should require a clear confirmation directive or equivalent.
+
+5. Run artifacts are part of safety, not decoration
+A stored run must include:
+- bundle.txt
+- packet.txt
+- surface.txt
+- run.json
+- manifest.json
+- snapshots/ where needed
+
+6. Recovery tools are first-class core ops
+The core tool must include:
+- RUNS
+- DIFF
+- REVERT_RUN
+- later: BRANCH
+
+7. Surface pages must not hide risk
+If a run failed, partially applied, touched files, or has recovery actions available, the Surface should make that visible.
+
+Current implemented baseline
+----------------------------
+Implemented:
+- structured run object
+- durable run storage
+- touched file metadata for CREATE_FILE
+- DIFF for stored touched files
+- REVERT_RUN restore/delete behaviour
+- package contract AUDIT
+- quick/full/contract HELP modes
+- tests proving CREATE_FILE + DIFF + REVERT_RUN
+
+Still needed:
+- BRANCH package
+- DELETE with confirmation
+- REPLACE_FILE with touched metadata
+- path safety helpers shared by all mutating ops
+- optional stop-on-fail / transaction design
+- memory/cache management policy
