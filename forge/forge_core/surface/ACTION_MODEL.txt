@@ -1,0 +1,116 @@
+Surface Action Model
+====================
+
+Purpose
+-------
+
+Surface is not just pretty output.
+
+Surface is a printed, tappable user interface where useful information,
+navigation, and actions live together.
+
+The rule:
+
+    visible text should be information, navigation, or action
+
+The action model exists so page renderers do not hand-write route tuples.
+Pages should describe intent:
+
+    open_editor(path)
+    file_page(path)
+    copy_text(text)
+    copy_bundle(bundle)
+    run_bundle(bundle)
+    op_detail(stamp, index)
+    back(context, stamp)
+    refresh(context, stamp)
+
+Page ownership
+--------------
+
+Content pages live near the thing they explain.
+
+Examples:
+
+    forge_packages/core_ops/read/pages.py
+    forge_packages/core_ops/insert/pages.py
+    forge_packages/core_ops/replace/pages.py
+
+This is good because READ owns the READ mental model and READ detail render.
+The central surface runtime should not become a giant switch statement full
+of op-specific page code.
+
+Centralised links
+-----------------
+
+Links and actions are shared infrastructure.
+
+They belong in:
+
+    forge_core/surface/actions.py
+
+That module should know route shapes. Op pages should not need to remember:
+
+    ('run_page', stamp, 'packet.raw')
+
+They should use:
+
+    raw(stamp)
+
+Back navigation
+---------------
+
+Back is a real concept, not just a button label.
+
+Every detail page should have a clear parent. Most op details come from the
+audit trail, so audit is the default parent. But if a page was reached from a
+different page, the route/context should preserve that as back_page.
+
+The normal helper is:
+
+    back(context, stamp)
+
+Live-feeling pages
+------------------
+
+A printed page can feel live if actions return to the current page after
+doing something useful.
+
+Examples:
+
+    Copy text -> HUD -> rerender same page
+    Open editor -> open file -> return to useful surface
+    Run small bundle -> render the resulting page
+    Toggle filter -> rerender same page with updated state
+
+The helper direction is:
+
+    refresh(context, stamp)
+
+Useful object links
+-------------------
+
+These should become standard patterns:
+
+    file path       -> file page / editor / copy path
+    op name         -> HELP / op detail
+    run stamp       -> run page
+    bundle example  -> copy bundle / run bundle
+    error hint      -> recovery action
+    search result   -> file + line / read around result
+
+Rendering
+---------
+
+Good links are only half the system. Surface also needs good visual rendering:
+
+    heroes
+    sections
+    graphs
+    tiles
+    cards
+    code highlighting
+    emojis
+    compact status rows
+
+The goal is not decoration. The goal is orientation and fast action.
