@@ -1,0 +1,160 @@
+Forge op package contract
+=========================
+
+Status
+------
+
+Draft v0.1, implemented in the current Forge workspace.
+
+Purpose
+-------
+
+Forge should respect the battle-tested Forge2 op design while making ops easier to package, document, test, audit, and render.
+
+The core decision:
+
+    op.py remains Forge-compatible.
+    manifest.py describes the package wrapper.
+    README.txt explains the package to users and LLMs.
+
+This means future migration can preserve existing Forge2 core op implementation details instead of rewriting everything from scratch.
+
+Required folder shape
+---------------------
+
+Every op package lives at:
+
+    forge_packages/core_ops/<op_name>/
+
+Required files:
+
+    op.py
+        Executable Forge op.
+
+    manifest.py
+        Machine-readable package metadata.
+
+    README.txt
+        User/LLM-facing explanation.
+
+Required op.py shape
+--------------------
+
+op.py must expose:
+
+    SPEC
+    HELP
+    validate(parsed_op)
+    execute(ctx, parsed_op, result)
+
+SPEC required keys:
+
+    name
+    target_kind
+    body_mode
+    allowed_directives
+    required_directives
+
+HELP minimum:
+
+    summary
+
+Strongly recommended HELP keys:
+
+    subject
+    directives
+    common_failures
+    safe_usage
+    minimal_example
+    related_ops
+
+Optional op.py attributes:
+
+    HINTS
+        Runtime or validation help.
+
+    helper functions
+        Internal implementation helpers.
+
+    structured result fields
+        result['data']
+        result['out']
+        result['surface_control']
+
+Required manifest.py shape
+--------------------------
+
+manifest.py must expose:
+
+    MANIFEST
+
+Minimum MANIFEST keys:
+
+    name
+        lower snake package folder name.
+
+    op
+        upper snake op name from SPEC['name'].
+
+    kind
+        normally 'core-op' for core ops.
+
+    version
+        semver-ish string.
+
+    summary
+        one-line package summary.
+
+Optional MANIFEST keys:
+
+    required
+        bool, whether the op is required for the Forge kernel.
+
+    risk
+        read-only | mutating | execution | recovery | render-control
+
+    domains
+        list of domain tags, e.g. ['filesystem', 'testing'].
+
+    status_codes
+        list of statuses the op may emit.
+
+    provides_pages
+        list of page ids or surface contributions.
+
+    requires
+        list of package/op dependencies.
+
+Optional package files
+----------------------
+
+Allowed optional files:
+
+    tests.py
+    helpers.py
+    fixtures/
+    docs/
+    linkos.py
+    surface.py
+
+Design rules
+------------
+
+1. Do not put domain-heavy logic in the registry.
+2. Do not force every op to have LinkOS behaviour.
+3. Do not require tests for tiny ops yet, but make room for them.
+4. HINTS are optional but strongly recommended for complex or dangerous ops.
+5. Mutating ops should document risk and status codes in MANIFEST.
+6. Package shape should make old Forge2 ops easier to migrate, not harder.
+
+Migration principle
+-------------------
+
+When moving a Forge2 op into package shape:
+
+    preserve op.py behaviour first
+    add manifest.py
+    add README.txt
+    add tests after behaviour is stable
+
+Do not rewrite a mature Forge2 op just to make it aesthetically new.
