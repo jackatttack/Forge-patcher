@@ -1,0 +1,41 @@
+# The loop
+
+## SUMMARY
+
+Forge works as a local loop between chat and Pythonista.
+
+The assistant writes a bundle. The user runs it. Forge returns a packet. The assistant reads the packet before continuing.
+
+## LOOP
+
+1. Assistant writes a Forge bundle.
+2. User copies it.
+3. User runs Forge locally.
+4. Forge parses the whole bundle.
+5. Forge executes the ops.
+6. Forge stores the run and recovery data.
+7. Forge returns a packet.
+8. User pastes the packet back.
+9. Assistant uses the packet as ground truth.
+
+## RULES
+
+Nothing happened unless the packet says it happened.
+
+A failed packet is useful. Read the status, failed op, hints, and preview.
+
+The parser reads the whole bundle before execution. New syntax added by a patch is not available later in the same bundle.
+
+## STATUSES
+
+- APPLIED means the op ran.
+- FAILED means fix that before continuing.
+- SKIPPED_AFTER_FAILURE means later mutating work did not happen.
+- FAILED_PARSE means the bundle shape or directive syntax was wrong.
+- FAILED_COMPILE means a Python edit was rolled back because it did not compile.
+
+The visible Surface helps the user skim, but the packet remains truth.
+
+@forge-bundle latest run
+
+RUNS latest
