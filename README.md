@@ -1,8 +1,8 @@
 # Forge
 
-Forge lets you pair-program with an AI assistant on your iPhone or iPad — without sending your code to a cloud agent or giving the assistant direct write access to your files.
+Forge lets you pair-program with an AI assistant on your iPhone or iPad without giving the assistant direct filesystem access.
 
-Forge is a local AI development harness for Pythonista on iOS. The assistant writes a plain-text Forge bundle. You choose when to run it. Forge executes it locally and returns a run packet.
+Forge is a local, clipboard-driven development harness for Pythonista on iOS. The assistant writes a plain-text Forge bundle. You choose when to run it. Forge executes it locally and returns a run packet.
 
 The run packet is the source of truth.
 
@@ -21,21 +21,15 @@ Forge is different:
 
 The assistant can suggest actions, but Forge only runs what you copy and execute.
 
-## Who this is for
-
-If you write code in Pythonista on iOS and want AI help that stays on your device, doesn't auto-execute, and keeps a recoverable audit trail of every change, Forge is for you.
-
-If you're on desktop with Cursor, Aider, or Claude Code, those tools are probably a better fit for your setup.
-
 ## The loop
 
 1. The assistant writes a Forge bundle.
 2. You copy it.
-3. You run `forge_entry.py` in Pythonista.
-4. Forge runs the bundle locally.
+3. You run Forge locally in Pythonista.
+4. Forge runs the bundle on your device.
 5. Forge copies a run packet back to your clipboard.
 6. You paste the packet back to the assistant.
-7. The assistant reads the packet and decides the next safe step.
+7. The assistant reads the packet before suggesting the next step.
 
 Nothing is confirmed until the packet comes back.
 
@@ -47,65 +41,35 @@ Create a new Pythonista file named:
 
 Paste in the installer script from this repo and run it.
 
-Then open:
+The installer downloads this repo and installs Forge into:
 
-    Forge/forge_entry.py
+    ~/Documents/forge/
 
-Run it once.
+Then open and run:
+
+    forge/forge_entry.py
 
 ## Start with an AI assistant
 
-Open this file and paste it into a fresh AI chat:
+For a new user tutorial, paste this file into a fresh AI chat:
 
-    AI_FIRST_BOOT.txt
+    forge/AI_FIRST_BOOT.txt
 
-That guide teaches the assistant how Forge works, how to stay packet-driven, and how to give you the first safe runnable bundle.
+For a shorter experienced-user prompt, use:
 
-A docs copy also lives at:
-
-    docs/AI_FIRST_BOOT.txt
-
-## First safe files
-
-These files are safe starting points:
-
-    start_here.py
-    install_health.py
-    forge_public_smoke.py
-    linkos.py
-    AI_FIRST_BOOT.txt
-
-`start_here.py` explains what Forge is.
-
-`install_health.py` checks your install without changing files.
-
-`forge_public_smoke.py` checks important files and syntax.
-
-`linkos.py` opens the human-facing LinkOS surface.
-
-## LinkOS
-
-Forge also renders a human-facing console surface called LinkOS.
-
-LinkOS helps you understand what happened, where you are, and what to do next. It provides docs, health checks, run views, recovery links, and safe exits.
-
-## Contained mode first
-
-Forge starts in contained mode.
-
-Contained mode means Forge works inside its own install folder. This is the safest setup for first use.
-
-Some LinkOS buttons may be display-only in contained mode. That is fine. You can still run `forge_entry.py` manually.
+    forge/AI_MINIMAL_BOOT.txt
 
 ## Optional root router
 
-When you want tappable LinkOS links and wider workspace access, run:
+After installing, you can run:
 
-    install_root_router.py
+    forge/install_root_router.py
 
-This creates small launcher files at Pythonista Documents root.
+That copies the current Forge entry script to:
 
-Only enable this deliberately. Root mode gives Forge access to more of your workspace.
+    ~/Documents/forge_entry.py
+
+Use this if you want an easy iOS Shortcut target and tappable Surface links.
 
 ## Core rule
 
