@@ -23,15 +23,12 @@ Start with a small, read-only orientation bundle.
 
 Use this exact bundle:
 
-    LIST_FILES .
+    MAP .
     DEPTH: 2
-    FILES: no
 
     LIST_OPS
 
-    HELP
-
-After the user pastes the packet back, inspect the available files and ops before suggesting edits.
+After the user pastes the packet back, inspect the project map and available ops before suggesting edits.
 
 ## Working rules
 
@@ -39,17 +36,13 @@ Prefer small bundles.
 
 Inspect before editing.
 
+Use MAP for structural orientation before broad READ.
+
 Use READ before patching a file.
 
 Use HELP <OP> when syntax is unclear.
 
 Use BRANCH create <name> before risky edits.
-
-Use RUN_FILE for local tests and smoke checks.
-
-Use AUDIT after changing Forge itself.
-
-Use DIFF current after edits when you need to review what changed.
 
 Avoid using private, personal, or device-specific paths unless the user explicitly gives them.
 
@@ -57,9 +50,13 @@ Do not ask the user to run hidden or background work. Every action should be rep
 
 ## Common safe commands
 
-    LIST_FILES forge
+    MAP forge
     DEPTH: 2
-    FILES: no
+
+    MAP path/to/file.py
+
+    MAP path/to/file.py
+    MODE: imports
 
     READ path/to/file.py
     LINES: 1-120
@@ -68,23 +65,23 @@ Do not ask the user to run hidden or background work. Every action should be rep
 
     HELP REPLACE
 
-    RUN_FILE forge/smoke.py
-
-    AUDIT
-
 ## Editing pattern
 
 A good edit loop is:
 
-    READ path/to/file.py
-    LINES: 1-160
+    MAP path/to/file.py
 
-Then, after the packet confirms the current text:
+    READ path/to/file.py::target_name
 
-    BRANCH create before_change
+Then, after the packet confirms the current structure and text:
+
+    REPLACE path/to/file.py::target_name
     BEGIN_BODY
-    path/to/file.py
+    def target_name():
+        return new_code
     END_BODY
+
+Or for plain text:
 
     REPLACE path/to/file.py
     BEGIN_OLD
@@ -93,10 +90,6 @@ Then, after the packet confirms the current text:
     BEGIN_NEW
     new exact text
     END_NEW
-
-    DIFF current
-
-    AUDIT
 
 For Python functions or classes, prefer target-aware reads and replacements when available:
 
