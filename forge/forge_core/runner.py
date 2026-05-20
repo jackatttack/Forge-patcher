@@ -12,6 +12,7 @@ import os
 from forge_core.engine import execute_ops
 from forge_core.models import final_status, make_run
 from forge_core.parser import parse_bundle
+from forge_core.preparse import expand_bundle
 from forge_core.registry import discover_ops
 from forge_core.renderers import build_pages, format_packet, format_surface
 from forge_core.run_storage import allocate_stamp, write_run
@@ -26,9 +27,21 @@ def run_text(bundle_text, project_root=None, mode='dev', store=True):
     run = make_run(bundle_text=bundle_text, mode=mode, project_root=project_root)
     run['stamp'] = allocate_stamp(project_root, mode=mode)
 
-    parsed = parse_bundle(bundle_text)
+    try:
+        expanded_bundle_text, preparse_report = expand_bundle(bundle_text, project_root)
+    except Exception as e:
+        expanded_bundle_text = bundle_text
+        preparse_report = {}
+        run.setdefault('errors', []).append(
+            'FAILED_PARSE | PREPARSE :: %s: %s' % (type(e).__name__, e)
+        )
+
+    if preparse_report:
+        run.update(preparse_report)
+
+    parsed = parse_bundle(expanded_bundle_text)
     run['parsed_ops'] = parsed.get('ops') or []
-    run['errors'] = parsed.get('errors') or []
+    run['errors'] = (run.get('errors') or []) + (parsed.get('errors') or [])
 
     if run['errors']:
         run['results'] = []
