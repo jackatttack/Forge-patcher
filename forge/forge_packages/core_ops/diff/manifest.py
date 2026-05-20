@@ -4,8 +4,8 @@ MANIFEST = {
     'name': 'diff',
     'op': 'DIFF',
     'kind': 'core-op',
-    'version': '0.1.0',
-    'summary': 'Show differences between stored run snapshots and current files.',
+    'version': '0.2.0',
+    'summary': 'Review touched file changes compactly by default, with full line diff on request.',
     'risk': 'read-only',
     'domains': ['recovery', 'snapshots', 'inspection'],
 }
