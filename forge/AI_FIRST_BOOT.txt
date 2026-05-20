@@ -39,9 +39,8 @@ Do not give a long explanation first.
 
 Send this:
 
-    LIST_FILES .
+    MAP .
     DEPTH: 2
-    FILES: no
 
     LIST_OPS
 
@@ -51,7 +50,7 @@ Then tell the user:
     Run Forge.
     Paste the returned packet back.
 
-That first bundle changes no project files. It gives you the project map and the available command vocabulary.
+That first bundle changes no project files. It gives you a source-focused project map and the available command vocabulary.
 
 First response template
 -----------------------
@@ -60,9 +59,8 @@ Use this shape:
 
     Here is the first safe Forge orientation bundle. It will not change project files. Copy it, run Forge, then paste the returned packet back.
 
-        LIST_FILES .
+        MAP .
         DEPTH: 2
-        FILES: no
 
         LIST_OPS
 
@@ -93,8 +91,6 @@ If the packet shows APPLIED, explain briefly:
     Now we can inspect something safely or learn one command.
 
 Then continue with a small tutorial step.
-
-Do not treat tests or DIFF as mandatory after every run. The packet is the normal source of truth for what happened. Tests, DIFF, AUDIT, and recovery commands are useful when the work calls for them, especially during serious development or after edits.
 
 The loop
 --------
@@ -146,33 +142,40 @@ A good beginner sequence:
 
 1. Orient
 
-        LIST_FILES .
+        MAP .
         DEPTH: 2
-        FILES: no
 
         LIST_OPS
 
 2. Learn HELP
 
-        HELP READ quick
+        HELP MAP quick
 
 3. Inspect a file or folder
+
+        MAP README.txt
 
         READ README.txt
 
    If README.txt does not exist, use the project map to choose a visible file.
 
-4. Search safely
+4. Inspect a Python file
+
+        MAP app.py
+
+   This shows imports, targets, and suggested reads without dumping full source.
+
+5. Search safely
 
         SEARCH . FOR TODO
         CONTEXT: 2
         LIMIT: 20
 
-5. Learn a write command before using it
+6. Learn a write command before using it
 
         HELP CREATE_FILE quick
 
-6. Create a harmless file
+7. Create a harmless file
 
         CREATE_FILE scratch/forge_tutorial_note.txt
         BEGIN_BODY
@@ -180,15 +183,15 @@ A good beginner sequence:
         This file was created by a small Forge bundle.
         END_BODY
 
-7. Read it back
+8. Read it back
 
         READ scratch/forge_tutorial_note.txt
 
-8. Learn a small edit
+9. Learn a small edit
 
         HELP REPLACE quick
 
-9. Edit the note
+10. Edit the note
 
         REPLACE scratch/forge_tutorial_note.txt
         BEGIN_OLD
@@ -198,7 +201,7 @@ A good beginner sequence:
         Forge tutorial note, edited safely.
         END_NEW
 
-10. Read it back again
+11. Read it back again
 
         READ scratch/forge_tutorial_note.txt
 
@@ -207,16 +210,39 @@ This teaches the loop, inspection, command help, file creation, and a small reve
 Main ops explained
 ------------------
 
+MAP
+
+    Shows source structure without dumping full contents.
+    Use it when you need orientation before reading, searching, or editing.
+
+    MAP is usually the first inspection op for unfamiliar projects, folders, packages, and Python files.
+
+    For directories, MAP shows README hints, likely entrypoints, source-focused structure, and suggested next commands.
+
+    For Python files, MAP shows imports, local dependencies, AST targets, and READ-ready target names.
+
+    Examples:
+
+        MAP .
+        DEPTH: 2
+
+        MAP app.py
+
+        MAP app.py
+        MODE: imports
+
+        MAP app.py
+        MODE: targets
+
 LIST_FILES
 
-    Shows a project tree.
-    Use it when you need orientation.
+    Shows a simpler directory tree without Python-specific analysis.
+    Use it when you only need a flat file listing.
 
     Example:
 
         LIST_FILES .
         DEPTH: 2
-        FILES: no
 
 LIST_OPS
 
@@ -244,8 +270,7 @@ READ
         READ app.py
         LINES: 1-80
 
-        READ app.py
-        TARGETS: yes
+        READ app.py::main
 
 SEARCH
 
@@ -285,20 +310,19 @@ DELETE
     Deletes a file, line range, or exact block.
     Treat it as advanced. It requires confirmation.
 
+MEMORY
+
+    Reads, searches, and writes session context.
+    Use MEMORY boot for compact session context at the start.
+
+    Example:
+
+        MEMORY boot
+
 RUNS
 
     Shows stored run history.
     Useful when you need to inspect a previous packet or recover context.
-
-DIFF
-
-    Shows before/after changes for touched files.
-    Useful after edits, but not required after every run.
-
-REVERT_RUN
-
-    Restores touched files from a stored run.
-    Explain it as a recovery tool, not a normal beginner command.
 
 BRANCH
 
@@ -310,10 +334,20 @@ RUN_FILE
     Runs a Python file and captures output.
     Useful when the task involves executable code.
 
+DIFF
+
+    Shows before/after changes for touched files.
+    Useful when reviewing edits, but not required after every run.
+
+REVERT_RUN
+
+    Restores touched files from a stored run.
+    Explain it as a recovery tool, not a normal beginner command.
+
 AUDIT
 
     Checks Forge op/package health.
-    Mostly useful when developing Forge itself or changing op packages.
+    Useful when developing Forge itself. Not needed for normal use.
 
 SURFACE
 
@@ -339,15 +373,13 @@ Safe editing pattern
 
 Before editing:
 
-    SEARCH for the area
+    MAP the project, package, file, or dependency area if structure is not clear
+    SEARCH for the area when looking for a specific symbol or phrase
     READ the exact file or target
-    HELP the op if syntax is not fresh
 
 Then use the smallest write operation that fits.
 
 After the user runs the bundle, read the packet.
-
-If the edit touched important code, then consider a focused check such as RUN_FILE, DIFF, or AUDIT. Do not make those mandatory for every tutorial step.
 
 Public language
 ---------------
@@ -371,7 +403,7 @@ Some local paths may still contain development names. Do not hide exact paths wh
 What to do when unsure
 ----------------------
 
-If you are unsure what files exist, inspect first.
+If you are unsure what files exist or how a project is shaped, use MAP first.
 
 If you are unsure about command syntax, use HELP.
 
