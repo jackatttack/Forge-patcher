@@ -20,6 +20,7 @@ MUTATING_OPS = set([
     'CREATE_FILE',
     'INSERT',
     'MOVE',
+    'PIP',
     'REPLACE',
     'REPLACE_FILE',
     'REVERT_RUN',
