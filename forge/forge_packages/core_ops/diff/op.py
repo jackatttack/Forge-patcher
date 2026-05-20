@@ -16,17 +16,35 @@ SPEC = {
     'name': 'DIFF',
     'target_kind': 'none',
     'body_mode': 'forbidden',
-    'allowed_directives': set(['ARGS']),
+    'allowed_directives': set(['ARGS', 'MODE']),
     'required_directives': set(),
 }
 
 HELP = {
-    'summary': 'Show stored before/after file changes for a run, plus current disk drift.',
+    'summary': 'Review touched file changes compactly by default, with full line diff on request.',
     'minimal_example': [
         'DIFF current',
+        '',
+        'DIFF current',
+        'MODE: full',
+        '',
         'DIFF latest',
+        '',
         'DIFF 20260511_120000',
+        'MODE: full',
     ],
+    'common_failures': [
+        'Using DIFF when the run packet already contains enough information.',
+        'Using MODE: full for large documentation changes and creating noisy packets.',
+        'Expecting DIFF to mutate or restore files. Use REVERT_RUN for recovery.',
+    ],
+    'safe_usage': [
+        'Prefer compact default mode for normal review.',
+        'Use MODE: full only when exact line-by-line detail matters.',
+        'Use DIFF current inside a bundle to review changes made earlier in that same bundle.',
+        'Use DIFF latest or DIFF <stamp> for stored runs.',
+    ],
+    'related_ops': ['RUNS', 'REVERT_RUN', 'READ', 'AUDIT'],
 }
 
 
@@ -53,6 +71,29 @@ def validate(parsed_op):
 
 def _args(parsed_op):
     return ((parsed_op.get('directives') or {}).get('ARGS') or parsed_op.get('target') or '').strip()
+
+
+def _mode(parsed_op):
+    directives = (parsed_op or {}).get('directives') or {}
+    mode = str(directives.get('MODE') or '').strip().lower()
+    if mode:
+        return mode
+
+    args = _args(parsed_op)
+    parts = [p.strip().lower() for p in args.split() if p.strip()]
+    for part in parts[1:]:
+        if part in ('full', 'compact'):
+            return part
+
+    return 'compact'
+
+
+def _stamp_arg(parsed_op):
+    args = _args(parsed_op)
+    parts = [p.strip() for p in args.split() if p.strip()]
+    if not parts:
+        return ''
+    return parts[0]
 
 
 def _diff_lines(before, after):
@@ -95,26 +136,80 @@ def _collect_current_touched(run):
             if isinstance(item, dict):
                 touched.append(dict(item))
 
-    out = []
-    seen = set()
+    by_rel = {}
+    order = []
+
     for item in touched:
         rel = str(item.get('rel') or item.get('file') or '').strip()
-        if not rel or rel in seen:
+        if not rel:
             continue
-        seen.add(rel)
 
-        out.append({
-            'rel': rel,
-            'kind': item.get('kind') or 'file',
-            'existed_before': bool(item.get('existed_before')),
-            'before': item.get('before') if item.get('before') is not None else '',
-            'after': item.get('after') if item.get('after') is not None else '',
-        })
+        before = item.get('before') if item.get('before') is not None else ''
+        after = item.get('after') if item.get('after') is not None else ''
 
-    return out
+        if rel not in by_rel:
+            order.append(rel)
+            by_rel[rel] = {
+                'rel': rel,
+                'kind': item.get('kind') or 'file',
+                'existed_before': bool(item.get('existed_before')),
+                'before': before,
+                'after': after,
+            }
+        else:
+            # A file can be patched multiple times in one run. Keep the first
+            # before snapshot and the final after snapshot so current-run diff
+            # reflects the aggregate change, not fake drift after the first edit.
+            by_rel[rel]['after'] = after
+            if item.get('kind'):
+                by_rel[rel]['kind'] = item.get('kind')
+
+    return [by_rel[rel] for rel in order]
 
 
-def _render_touched(root, label, touched):
+def _line_count(text):
+    return len((text or '').splitlines())
+
+
+def _changed_ranges(before, after):
+    before_lines = (before or '').splitlines()
+    after_lines = (after or '').splitlines()
+    max_len = max(len(before_lines), len(after_lines))
+    nums = []
+
+    for i in range(max_len):
+        b = before_lines[i] if i < len(before_lines) else None
+        a = after_lines[i] if i < len(after_lines) else None
+        if b != a:
+            nums.append(i + 1)
+
+    if not nums:
+        return 'none'
+
+    ranges = []
+    start = nums[0]
+    prev = nums[0]
+
+    for n in nums[1:]:
+        if n == prev + 1:
+            prev = n
+            continue
+        ranges.append((start, prev))
+        start = prev = n
+
+    ranges.append((start, prev))
+
+    parts = []
+    for a, b in ranges:
+        if a == b:
+            parts.append(str(a))
+        else:
+            parts.append('%d-%d' % (a, b))
+
+    return ', '.join(parts)
+
+
+def _render_touched_full(root, label, touched):
     lines = ['DIFF %s' % label]
 
     if not touched:
@@ -158,19 +253,79 @@ def _render_touched(root, label, touched):
     return lines
 
 
+def _render_touched_compact(root, label, touched):
+    lines = ['DIFF %s' % label, 'MODE=compact']
+
+    if not touched:
+        lines.append('(no touched files)')
+        return lines
+
+    lines.append('%d touched file(s)' % len(touched))
+
+    for item in touched:
+        rel = item.get('rel') or '?'
+        existed_before = bool(item.get('existed_before'))
+        before = item.get('before') or ''
+        after = item.get('after') or ''
+        current, current_exists = _read_current(root, rel)
+
+        lines.append('')
+        lines.append(rel)
+
+        if not existed_before:
+            lines.append('  stored: created by run')
+            lines.append('  lines: 0 -> %d' % _line_count(after))
+        elif before == after:
+            lines.append('  stored: touched, no content change')
+            lines.append('  lines: %d' % _line_count(after))
+        else:
+            lines.append('  stored: modified by run')
+            lines.append('  lines: %d -> %d' % (_line_count(before), _line_count(after)))
+            lines.append('  changed lines: %s' % _changed_ranges(before, after))
+
+        if current_exists:
+            if current != after:
+                lines.append('  drift: yes')
+                lines.append('  current lines: %d' % _line_count(current))
+                lines.append('  drift lines: %s' % _changed_ranges(after, current))
+            else:
+                lines.append('  drift: no')
+        else:
+            if after:
+                lines.append('  drift: file missing on disk')
+            else:
+                lines.append('  drift: no current file')
+
+    lines.append('')
+    lines.append('Use MODE: full for line-by-line diff output.')
+    return lines
+
+
+def _render_touched(root, label, touched, mode='compact'):
+    if str(mode or '').strip().lower() == 'full':
+        return _render_touched_full(root, label, touched)
+    return _render_touched_compact(root, label, touched)
+
+
 def execute(ctx, parsed_op, result):
     from forge_core.run_storage import list_runs, read_manifest
 
     root = ctx.get('project_root') or os.getcwd()
-    stamp = _args(parsed_op)
+    stamp = _stamp_arg(parsed_op)
+    diff_mode = _mode(parsed_op)
+
+    if diff_mode not in ('compact', 'full'):
+        result['status'] = 'FAILED_PARSE'
+        result['message'] = 'DIFF MODE must be compact or full, got: ' + str(diff_mode)
+        return
 
     if stamp == 'current':
         touched = _collect_current_touched(ctx.get('run') or {})
-        lines = _render_touched(root, 'current', touched)
+        lines = _render_touched(root, 'current', touched, mode=diff_mode)
         result['status'] = 'APPLIED'
         result['message'] = '%d current file(s) diffed' % len(touched)
         result['preview'] = '\n'.join(lines).rstrip()
-        result['data'] = {'mode': 'current', 'touched': touched}
+        result['data'] = {'mode': 'current', 'diff_mode': diff_mode, 'touched': touched}
         return
 
     if not stamp or stamp == 'latest':
@@ -189,9 +344,9 @@ def execute(ctx, parsed_op, result):
         return
 
     touched = manifest.get('touched') or []
-    lines = _render_touched(root, stamp, touched)
+    lines = _render_touched(root, stamp, touched, mode=diff_mode)
 
     result['status'] = 'APPLIED'
     result['message'] = '%d file(s) diffed' % len(touched)
     result['preview'] = '\n'.join(lines).rstrip()
-    result['data'] = {'mode': 'stored', 'stamp': stamp, 'touched': touched}
+    result['data'] = {'mode': 'stored', 'diff_mode': diff_mode, 'stamp': stamp, 'touched': touched}
