@@ -51,13 +51,14 @@ SPEC = {
     'allowed_directives': set([
         'QUERY', 'CASE', 'LIMIT', 'EXT',
         'MATCH', 'CONTEXT', 'FILTER',
+        'DEFINES', 'CALLS', 'IMPORTS', 'ASSIGNS',
     ]),
     'required_directives': set(),
 }
 
 
 HELP = {
-    'summary': 'Search project files for text matches.',
+    'summary': 'Search project files by text or Python AST structure.',
     'minimal_example': [
         'SEARCH forge FOR package contract',
         '',
@@ -73,6 +74,28 @@ HELP = {
         'SEARCH forge FOR surface',
         'EXT: .py,.txt',
         'LIMIT: 40',
+        '',
+        'SEARCH forge',
+        'MATCH: ast',
+        'DEFINES: run_text',
+        '',
+        'SEARCH forge',
+        'MATCH: ast',
+        'CALLS: parse_bundle',
+        '',
+        'SEARCH forge',
+        'MATCH: ast',
+        'IMPORTS: forge_core.preparse',
+        '',
+        'SEARCH forge',
+        'MATCH: ast',
+        'ASSIGNS: SPEC',
+        'CASE: yes',
+        '',
+        'SEARCH forge',
+        'MATCH: ast',
+        'CALLS: expand_bundle',
+        'FILTER: forge_core',
     ],
 }
 
@@ -80,43 +103,58 @@ HELP = {
 HINTS = {
     '_max_hints': 1,
     'query': {
-        'message': 'SEARCH needs a query.',
-        'why': 'Forge needs text to search for before scanning files.',
+        'message': 'SEARCH needs a query or AST search directive.',
+        'why': 'Text search needs text. AST search needs a structural directive such as DEFINES, CALLS, IMPORTS, or ASSIGNS.',
         'example': [
             'SEARCH forge FOR package contract',
             '',
             'SEARCH forge',
             'QUERY: package contract',
+            '',
+            'SEARCH forge',
+            'MATCH: ast',
+            'CALLS: parse_bundle',
         ],
         'next': [
-            'Use SEARCH path FOR text for simple searches.',
+            'Use SEARCH path FOR text for simple text searches.',
             'Use QUERY when the search text is long or awkward.',
+            'Use MATCH: ast with DEFINES, CALLS, IMPORTS, or ASSIGNS for Python structure.',
             'Use EXT to widen the file types scanned.',
         ],
     },
     'no hits': {
         'message': 'SEARCH found no hits.',
-        'why': 'The query may be too specific, the target too narrow, or the text may not exist in scanned files.',
+        'why': 'The query may be too specific, the target too narrow, or the text/structure may not exist in scanned files.',
         'example': [
             'SEARCH forge FOR hint',
             'MATCH: fuzzy',
             '',
             'SEARCH hint IN forge',
+            '',
+            'SEARCH forge',
+            'MATCH: ast',
+            'CALLS: parse_bundle',
         ],
         'next': [
-            'Try MATCH: fuzzy for token-based matching.',
+            'Try MATCH: fuzzy for token-based text matching.',
+            'For AST search, try a shorter name such as parse_bundle instead of module.parse_bundle.',
+            'Use CASE: yes only when exact case matters.',
             'Broaden EXT, e.g. EXT: .py,.txt,.md,.json',
-            'Search a wider directory.',
+            'Search a wider directory or remove FILTER.',
         ],
     },
     'match must be': {
-        'message': 'SEARCH MATCH must be exact, fuzzy, or regex.',
-        'why': 'SEARCH supports three matching modes.',
+        'message': 'SEARCH MATCH must be exact, fuzzy, regex, or ast.',
+        'why': 'SEARCH supports text matching and Python AST structural matching.',
         'example': [
             'SEARCH forge FOR render hints',
             'MATCH: fuzzy',
+            '',
+            'SEARCH forge',
+            'MATCH: ast',
+            'CALLS: parse_bundle',
         ],
-        'next': ['Use MATCH: exact, MATCH: fuzzy, or MATCH: regex'],
+        'next': ['Use MATCH: exact, MATCH: fuzzy, MATCH: regex, or MATCH: ast'],
     },
 }
 
@@ -192,16 +230,27 @@ def validate(parsed_op):
     if not target:
         errors.append('SEARCH requires a target file or directory')
 
-    if not query:
+    match_mode = str(directives.get('MATCH') or 'exact').strip().lower()
+    ast_terms = [
+        str(directives.get('DEFINES') or '').strip(),
+        str(directives.get('CALLS') or '').strip(),
+        str(directives.get('IMPORTS') or '').strip(),
+        str(directives.get('ASSIGNS') or '').strip(),
+    ]
+
+    if not query and match_mode != 'ast':
         errors.append('SEARCH requires QUERY or inline syntax: SEARCH path FOR text')
+
+    if match_mode == 'ast' and not query and not any(ast_terms):
+        errors.append('SEARCH MATCH: ast requires QUERY, DEFINES, CALLS, IMPORTS, or ASSIGNS')
 
     limit = _as_int(directives.get('LIMIT'), 80)
     if limit < 1:
         errors.append('SEARCH LIMIT must be >= 1')
 
     match_mode = str(directives.get('MATCH') or 'exact').strip().lower()
-    if match_mode not in ('exact', 'fuzzy', 'regex'):
-        errors.append('SEARCH MATCH must be exact, fuzzy, or regex, got: ' + match_mode)
+    if match_mode not in ('exact', 'fuzzy', 'regex', 'ast'):
+        errors.append('SEARCH MATCH must be exact, fuzzy, regex, or ast, got: ' + match_mode)
 
     context_raw = directives.get('CONTEXT')
     if context_raw not in (None, ''):
@@ -277,6 +326,104 @@ def execute(ctx, parsed_op, result):
     context = _as_int(directives.get('CONTEXT'), 0)
     context = max(0, min(context, 20))
     path_filter = (directives.get('FILTER') or '').strip()
+
+    if match_mode == 'ast':
+        from forge_core.ast_search import search_ast_files
+
+        ast_exts = set(_parse_exts(directives.get('EXT') or '.py'))
+        files = []
+        for path in _iter_files(root, abs_path, ast_exts):
+            try:
+                rel = os.path.relpath(path, root)
+            except Exception:
+                rel = path
+            if path_filter and path_filter not in rel:
+                continue
+            files.append(path)
+
+        criteria = {
+            'defines': directives.get('DEFINES') or query,
+            'calls': directives.get('CALLS') or '',
+            'imports': directives.get('IMPORTS') or '',
+            'assigns': directives.get('ASSIGNS') or '',
+            'case_sensitive': case_sensitive,
+        }
+
+        hits, searched, syntax_errors, stopped_at_limit = search_ast_files(
+            root,
+            files,
+            criteria,
+            limit=limit,
+        )
+
+        files_hit = len(set([h.get('file') for h in hits]))
+        header = [
+            "SEARCH AST in %s [%d hit%s across %d Python file%s scanned, %d file%s hit]" % (
+                target,
+                len(hits), '' if len(hits) == 1 else 's',
+                searched, '' if searched == 1 else 's',
+                files_hit, '' if files_hit == 1 else 's',
+            ),
+        ]
+        header.append('MATCH=ast')
+        if criteria.get('defines'):
+            header.append('DEFINES=%r' % criteria.get('defines'))
+        if criteria.get('calls'):
+            header.append('CALLS=%r' % criteria.get('calls'))
+        if criteria.get('imports'):
+            header.append('IMPORTS=%r' % criteria.get('imports'))
+        if criteria.get('assigns'):
+            header.append('ASSIGNS=%r' % criteria.get('assigns'))
+        if path_filter:
+            header.append('FILTER=%r' % path_filter)
+        header.append('LIMIT=%d' % limit)
+        if stopped_at_limit:
+            header.append('(limit reached, results may be incomplete)')
+        if syntax_errors:
+            header.append('syntax_errors=%d' % len(syntax_errors))
+
+        out = ['\n'.join(header)]
+
+        if not hits:
+            out.append('(no hits)')
+        else:
+            grouped = {}
+            for hit in hits:
+                grouped.setdefault(hit.get('file'), []).append(hit)
+
+            for rel in sorted(grouped):
+                out.append(rel)
+                for hit in grouped[rel]:
+                    out.append(
+                        '  >%04d: %-10s %-24s %s' % (
+                            int(hit.get('line') or 0),
+                            hit.get('kind') or '',
+                            hit.get('name') or '',
+                            hit.get('target') or '',
+                        )
+                    )
+                    text = hit.get('text') or ''
+                    if text:
+                        out.append('         ' + text)
+
+        result['status'] = 'APPLIED'
+        result['message'] = '%d AST hits across %d files scanned' % (len(hits), searched)
+        result['preview'] = '\n'.join(out)
+        result['data'] = {
+            'target': target,
+            'query': query,
+            'hits': hits,
+            'searched': searched,
+            'files_hit': files_hit,
+            'limit': limit,
+            'limit_reached': stopped_at_limit,
+            'case_sensitive': case_sensitive,
+            'match_mode': match_mode,
+            'path_filter': path_filter,
+            'exts': sorted(ast_exts),
+            'syntax_errors': syntax_errors,
+        }
+        return
 
     # Compile regex up front so a bad pattern fails clean.
     regex = None
