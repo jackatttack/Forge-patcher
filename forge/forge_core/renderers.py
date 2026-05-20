@@ -20,6 +20,122 @@ import sys
 from forge_core.surface.pages import build_pages
 
 
+def _packet_line_count(text):
+    return len((text or '').splitlines())
+
+
+def _packet_changed_ranges(before, after):
+    before_lines = (before or '').splitlines()
+    after_lines = (after or '').splitlines()
+    max_len = max(len(before_lines), len(after_lines))
+    nums = []
+
+    for i in range(max_len):
+        b = before_lines[i] if i < len(before_lines) else None
+        a = after_lines[i] if i < len(after_lines) else None
+        if b != a:
+            nums.append(i + 1)
+
+    if not nums:
+        return 'none'
+
+    ranges = []
+    start = nums[0]
+    prev = nums[0]
+
+    for n in nums[1:]:
+        if n == prev + 1:
+            prev = n
+            continue
+        ranges.append((start, prev))
+        start = prev = n
+
+    ranges.append((start, prev))
+
+    parts = []
+    for a, b in ranges:
+        if a == b:
+            parts.append(str(a))
+        else:
+            parts.append('%d-%d' % (a, b))
+
+    return ', '.join(parts)
+
+
+def _packet_collect_touched(run):
+    touched = []
+
+    for item in (run or {}).get('touched_files') or []:
+        if isinstance(item, dict):
+            touched.append(dict(item))
+
+    for res in (run or {}).get('results') or []:
+        for item in res.get('touched') or []:
+            if isinstance(item, dict):
+                touched.append(dict(item))
+
+    by_rel = {}
+    order = []
+
+    for item in touched:
+        rel = str(item.get('rel') or item.get('file') or '').strip()
+        if not rel:
+            continue
+
+        before = item.get('before') if item.get('before') is not None else ''
+        after = item.get('after') if item.get('after') is not None else ''
+
+        if rel not in by_rel:
+            order.append(rel)
+            by_rel[rel] = {
+                'rel': rel,
+                'kind': item.get('kind') or 'file',
+                'existed_before': bool(item.get('existed_before')),
+                'before': before,
+                'after': after,
+            }
+        else:
+            by_rel[rel]['after'] = after
+            if item.get('kind'):
+                by_rel[rel]['kind'] = item.get('kind')
+
+    return [by_rel[rel] for rel in order]
+
+
+def _format_changed_files(run):
+    touched = _packet_collect_touched(run)
+    if not touched:
+        return []
+
+    lines = []
+    lines.append('')
+    lines.append('Changed files:')
+
+    for item in touched:
+        rel = item.get('rel') or '?'
+        existed_before = bool(item.get('existed_before'))
+        before = item.get('before') or ''
+        after = item.get('after') or ''
+
+        if not existed_before:
+            summary = 'created · %d lines' % _packet_line_count(after)
+        elif before == after:
+            summary = 'touched · %d lines · no content change' % _packet_line_count(after)
+        else:
+            summary = (
+                'modified · %d -> %d lines · changed: %s'
+                % (
+                    _packet_line_count(before),
+                    _packet_line_count(after),
+                    _packet_changed_ranges(before, after),
+                )
+            )
+
+        lines.append('- %s — %s' % (rel, summary))
+
+    return lines
+
+
 def format_packet(run):
     lines = []
     lines.append('=== FORGE RUN ===')
@@ -51,6 +167,10 @@ def format_packet(run):
             if r.get('message'):
                 line += ' :: ' + str(r.get('message'))
             lines.append(line)
+
+    changed = _format_changed_files(run)
+    if changed:
+        lines.extend(changed)
 
     hinted = [r for r in results if r.get('hint')]
     if hinted:
