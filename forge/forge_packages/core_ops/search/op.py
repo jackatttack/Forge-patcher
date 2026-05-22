@@ -186,24 +186,34 @@ def _parse_exts(raw):
 
     return tuple(exts) if exts else tuple(_DEFAULT_EXTS)
 
+def _strip_wrapping_quotes(text):
+    """Remove one simple pair of wrapping quotes from a search query."""
+    text = str(text or '').strip()
+    if len(text) >= 2:
+        first = text[0]
+        last = text[-1]
+        if first == last and first in ('"', "'"):
+            return text[1:-1].strip()
+    return text
+
 
 def _inline_target_query(target, directives):
     target = str(target or '').strip()
     directives = directives or {}
 
-    explicit = str(directives.get('QUERY') or '').strip()
+    explicit = _strip_wrapping_quotes(directives.get('QUERY') or '')
     if explicit:
         return target, explicit
 
     marker = ' FOR '
     if marker in target:
         left, _sep, right = target.partition(marker)
-        return left.strip(), right.strip()
+        return left.strip(), _strip_wrapping_quotes(right)
 
     marker = ' IN '
     if marker in target:
         left, _sep, right = target.rpartition(marker)
-        return right.strip(), left.strip()
+        return right.strip(), _strip_wrapping_quotes(left)
 
     return target, ''
 
