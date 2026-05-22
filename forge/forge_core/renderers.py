@@ -123,15 +123,17 @@ def _format_changed_files(run):
             summary = 'touched · %d lines · no content change' % _packet_line_count(after)
         else:
             summary = (
-                'modified · %d -> %d lines · changed: %s'
+                'modified · %d -> %d lines'
                 % (
                     _packet_line_count(before),
                     _packet_line_count(after),
-                    _packet_changed_ranges(before, after),
                 )
             )
 
         lines.append('- %s — %s' % (rel, summary))
+
+    lines.append('')
+    lines.append('Use DIFF current for compact details. Use DIFF current MODE: full for line-by-line diff.')
 
     return lines
 
