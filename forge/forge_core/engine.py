@@ -75,6 +75,39 @@ def execute_ops(parsed_ops, project_root, run):
         except Exception:
             return False
 
+    def parsed_can_continue_after_failure(parsed_op):
+        """Return True for diagnostic ops that should still run after failure."""
+        op = str((parsed_op or {}).get('op') or '').strip().upper()
+        target = str((parsed_op or {}).get('target') or '').strip()
+        command = target.split()[0].lower() if target else ''
+
+        if op in (
+            'READ',
+            'MAP',
+            'SEARCH',
+            'HELP',
+            'LIST_FILES',
+            'LIST_TARGETS',
+            'LIST_OPS',
+            'DIFF',
+            'AUDIT',
+            'RUN_FILE',
+            'RUNS',
+        ):
+            return True
+
+        if op == 'GIT' and command in (
+            'status',
+            'branches',
+            'commits',
+            'files',
+            'file',
+            'diff',
+        ):
+            return True
+
+        return False
+
     def result_failed(result):
         status = str((result or {}).get('status') or '').strip().upper()
         return status != 'APPLIED'
@@ -85,7 +118,11 @@ def execute_ops(parsed_ops, project_root, run):
         result = make_result(op_name, target)
         mod = get_op(op_name)
 
-        if stop_mutating and parsed_is_mutating(parsed_op):
+        if (
+            stop_mutating
+            and parsed_is_mutating(parsed_op)
+            and not parsed_can_continue_after_failure(parsed_op)
+        ):
             result['status'] = 'SKIPPED_AFTER_FAILURE'
             result['message'] = 'Skipped mutating op after earlier failure: ' + stop_reason
             _finish_result(run, results, mod, result)
