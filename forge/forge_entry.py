@@ -175,8 +175,61 @@ def _write_clipboard(text):
 
 
 def _format_output(run):
+    run = run or {}
     packet = run.get('packet') or ''
     stamp = run.get('stamp') or '?'
+
+    def clipboard_raw_return():
+        """Return raw copied text when a CLIPBOARD op was applied.
+
+        CLIPBOARD is intentionally different from normal Forge ops: its user-facing
+        purpose is copying text, not returning a packet wrapper. The run is still
+        stored on disk, but the iOS clipboard should contain the copied source.
+        """
+        results = run.get('results') or []
+        chosen = None
+
+        for result in results:
+            if not isinstance(result, dict):
+                continue
+            op_name = str(result.get('op') or '').strip().upper()
+            status = str(result.get('status') or '').strip().upper()
+            if op_name == 'CLIPBOARD' and status == 'APPLIED':
+                chosen = result
+
+        if not chosen:
+            return None
+
+        data = chosen.get('data') or {}
+        target = (
+            chosen.get('file')
+            or data.get('path')
+            or chosen.get('target')
+            or ''
+        )
+        target = str(target or '').strip().replace('\\', '/').lstrip('/')
+
+        if not target:
+            return None
+
+        abs_path = os.path.abspath(os.path.join(ROOT, target))
+        root_abs = os.path.abspath(ROOT)
+
+        if not (abs_path == root_abs or abs_path.startswith(root_abs + os.sep)):
+            return None
+
+        if not os.path.isfile(abs_path):
+            return None
+
+        try:
+            with open(abs_path, 'r', encoding='utf-8') as f:
+                return f.read()
+        except Exception:
+            return None
+
+    raw_clipboard = clipboard_raw_return()
+    if raw_clipboard is not None:
+        return raw_clipboard
 
     parts = ['=== FORGE CLIPBOARD RETURN ===']
 
