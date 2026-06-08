@@ -241,6 +241,110 @@ def _shape_summary(map_data):
             summary[key.replace(' ', '_')] = value
     return summary
 
+def _agent_commands(map_data):
+    commands = _command_rows(map_data)
+    reads = []
+    maps = []
+    seen_reads = set()
+    seen_maps = set()
+
+    for cmd in commands:
+        text = str(cmd or '').strip()
+        if text.startswith('READ ') and text not in seen_reads:
+            reads.append(text)
+            seen_reads.add(text)
+        elif text.startswith('MAP ') and text not in seen_maps:
+            maps.append(text)
+            seen_maps.add(text)
+
+    return reads, maps
+
+
+def _role_from_path(target, kind, map_data):
+    target = str(target or '').replace('\\', '/')
+    lower = target.lower()
+    kind = str(kind or '').strip().lower()
+    sections = (map_data or {}).get('sections') or {}
+    fields = (map_data or {}).get('fields') or {}
+
+    if kind == 'directory':
+        if '/core_ops/' in lower or '/custom_ops/' in lower:
+            return 'op_package'
+        if lower.endswith('/docs') or '/docs/' in lower:
+            return 'docs'
+        if 'smoke' in lower or 'test' in lower:
+            return 'smokes'
+        if lower.startswith('archive/') or '/archive/' in lower:
+            return 'archive_reference'
+        if lower.startswith('projects/') and lower.count('/') <= 1:
+            return 'project_root'
+        return 'directory'
+
+    name = target.rsplit('/', 1)[-1]
+
+    if name in ('op.py', 'manifest.py') and ('/core_ops/' in lower or '/custom_ops/' in lower):
+        return 'op_file'
+    if name == 'pages.py' and ('/core_ops/' in lower or '/custom_ops/' in lower):
+        return 'surface_page'
+    if 'renderer' in lower or '/render/' in lower:
+        return 'renderer'
+    if '/components/' in lower or '/component' in lower:
+        return 'component'
+    if 'smoke' in lower or 'test_' in lower or lower.endswith('_test.py'):
+        return 'smoke'
+    if name in ('entry.py', 'main.py', 'launcher.py') or name.startswith('run_'):
+        return 'launcher'
+    if name.upper() in ('README.TXT', 'README.MD', 'HANDOFF.TXT', 'PROJECT_CONTROL.TXT', 'ROADMAP.TXT'):
+        return 'project_doc'
+    if kind == 'python-file':
+        target_rows = sections.get('Targets') or sections.get('Target highlights') or []
+        joined = '\n'.join(str(x) for x in target_rows)
+        if 'render_' in joined or '_render' in joined:
+            return 'renderer_like_python'
+        if 'execute' in joined and 'SPEC' in joined:
+            return 'op_like_python'
+        return 'python_file'
+
+    if str(fields.get('path') or '').lower().endswith(('.txt', '.md', '.rst')):
+        return 'doc_file'
+
+    return kind or 'unknown'
+
+
+def _agent_warnings(target, kind, map_data):
+    warnings = []
+    target = str(target or '').replace('\\', '/')
+    lower = target.lower()
+    fields = (map_data or {}).get('fields') or {}
+    sections = (map_data or {}).get('sections') or {}
+
+    if lower.startswith('archive/') or '/archive/' in lower:
+        warnings.append('archive/reference-looking path')
+    if lower.startswith('workspaces/forge2/') or lower.startswith('workspaces/forge_reboot/'):
+        warnings.append('old Forge workspace/reference path')
+    if lower.startswith('workspaces/forge_public_release/'):
+        warnings.append('public release staging path')
+    if fields.get('scale'):
+        warnings.append(str(fields.get('scale')))
+    if kind == 'python-file' and not sections.get('Suggested next reads'):
+        warnings.append('no suggested target reads found')
+
+    return warnings
+
+
+def _agent_data(target, kind, map_data):
+    reads, maps = _agent_commands(map_data)
+    warnings = _agent_warnings(target, kind, map_data)
+    fields = (map_data or {}).get('fields') or {}
+
+    return {
+        'role': _role_from_path(target, kind, map_data),
+        'suggested_reads': reads,
+        'suggested_maps': maps,
+        'large_file': bool(fields.get('scale')),
+        'warnings': warnings,
+    }
+
 
 def validate(parsed_op):
     errors = []
@@ -1167,4 +1271,5 @@ def execute(ctx, parsed_op, result):
         'imports_preview': _import_rows_from_preview(map_data),
         'targets_preview': _target_rows_from_preview(map_data),
         'local_dependencies': _local_dependency_rows(map_data),
+        'agent': _agent_data(raw_target, kind, map_data),
     }
