@@ -176,6 +176,18 @@ Find text with nearby context:
     SEARCH forge FOR parser rule
     CONTEXT: 3
 
+Search active code while avoiding archive/reference paths:
+
+    SEARCH . FOR render_search_map_html
+    ACTIVE_ONLY: yes
+    EXT: .py
+
+Search a broad tree but deliberately skip noisy areas:
+
+    SEARCH . FOR def execute
+    EXT: .py
+    EXCLUDE: archive,workspaces
+
 ## Directives
 
 - QUERY: text — explicit text query. In MATCH: ast, it can act like DEFINES, but prefer explicit AST directives.
@@ -184,7 +196,9 @@ Find text with nearby context:
 - LIMIT: N — cap matches. Default: 80.
 - CASE: yes — use case-sensitive matching.
 - CONTEXT: N — show neighbouring lines for text search.
-- FILTER: text — restrict matched paths by substring.
+- FILTER: text — include only matched paths containing this substring.
+- EXCLUDE: text,text — exclude matched paths containing any listed substring.
+- ACTIVE_ONLY: yes — exclude common archive/reference/staging paths such as archive/, old workspaces, public release staging, and packed/.
 - DEFINES: name — AST search for function, method, or class definitions.
 - CALLS: name — AST search for function/method calls.
 - IMPORTS: module — AST search for import sites.
@@ -216,6 +230,9 @@ Those belong in a future dependency-focused op.
 - Use MATCH: ast when searching Python structure rather than text.
 - Use explicit AST directives instead of QUERY in AST mode when possible.
 - Use FILTER aggressively on large trees.
+- Use EXCLUDE or ACTIVE_ONLY when broad search might include archive/reference copies.
 - Use CASE: yes with ASSIGNS: SPEC when looking for op package SPEC objects.
+- Text hits include lightweight hit kinds such as function, class, import, assignment, doc, test, comment, or code.
+- SEARCH suggests next READ/MAP commands for high-value hits when possible.
 - After SEARCH finds candidates, use READ on the specific file or AST target.
 - SEARCH is read-only. It should not touch files or create snapshots.
