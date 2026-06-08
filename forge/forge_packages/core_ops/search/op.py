@@ -50,7 +50,7 @@ SPEC = {
     'body_mode': 'forbidden',
     'allowed_directives': set([
         'QUERY', 'CASE', 'LIMIT', 'EXT',
-        'MATCH', 'CONTEXT', 'FILTER',
+        'MATCH', 'CONTEXT', 'FILTER', 'EXCLUDE', 'ACTIVE_ONLY',
         'DEFINES', 'CALLS', 'IMPORTS', 'ASSIGNS',
     ]),
     'required_directives': set(),
@@ -230,6 +230,93 @@ def _fuzzy_match(pattern, line):
     tokens = [t for t in needle.split(' ') if t]
     return all(tok in hay for tok in tokens)
 
+def _parse_csv(value):
+    return [part.strip() for part in str(value or '').split(',') if part.strip()]
+
+
+def _active_only_excludes(enabled):
+    if not enabled:
+        return []
+    return [
+        'archive/',
+        'workspaces/forge2/',
+        'workspaces/forge_reboot/',
+        'workspaces/forge_public_release/',
+        'packed/',
+    ]
+
+
+def _path_excluded(rel, exclude_terms):
+    rel_norm = str(rel or '').replace('\\', '/')
+    for term in exclude_terms or []:
+        term = str(term or '').replace('\\', '/').strip()
+        if term and term in rel_norm:
+            return True
+    return False
+
+
+def _classify_text_hit(rel, line):
+    rel_norm = str(rel or '').replace('\\', '/').lower()
+    stripped = str(line or '').strip()
+    code = stripped.lower()
+
+    if rel_norm.endswith(('.md', '.txt', '.rst')):
+        return 'doc'
+    if '/smoke' in rel_norm or 'smoke' in rel_norm or '/test' in rel_norm or 'test_' in rel_norm:
+        if 'assert' in code:
+            return 'test_assertion'
+        return 'test'
+    if rel_norm.endswith('.py'):
+        if code.startswith('#'):
+            return 'comment'
+        if code.startswith('def ') or code.startswith('async def '):
+            return 'function'
+        if code.startswith('class '):
+            return 'class'
+        if code.startswith('import ') or code.startswith('from '):
+            return 'import'
+        if re.match(r'^[A-Za-z_][A-Za-z0-9_]*\s*=', stripped):
+            return 'assignment'
+        if '"' in stripped or "'" in stripped:
+            return 'string_or_code'
+        return 'code'
+    return 'text'
+
+
+def _suggest_read_for_hit(hit):
+    rel = str((hit or {}).get('file') or '').strip()
+    if not rel:
+        return ''
+    line = int((hit or {}).get('line') or 0)
+    kind = str((hit or {}).get('kind') or '').strip()
+
+    if (hit or {}).get('target'):
+        return 'READ ' + str((hit or {}).get('target')).strip()
+
+    if kind in ('function', 'class') and rel.endswith('.py'):
+        return 'MAP ' + rel
+
+    if line > 0:
+        start = max(1, line - 8)
+        end = line + 12
+        return 'READ %s\nLINES: %d-%d' % (rel, start, end)
+
+    return 'READ ' + rel
+
+
+def _unique_suggested_reads(hits, limit=6):
+    suggestions = []
+    seen = set()
+    for hit in hits or []:
+        cmd = _suggest_read_for_hit(hit)
+        if not cmd or cmd in seen:
+            continue
+        suggestions.append(cmd)
+        seen.add(cmd)
+        if len(suggestions) >= int(limit or 6):
+            break
+    return suggestions
+
 
 def validate(parsed_op):
     errors = []
@@ -336,6 +423,8 @@ def execute(ctx, parsed_op, result):
     context = _as_int(directives.get('CONTEXT'), 0)
     context = max(0, min(context, 20))
     path_filter = (directives.get('FILTER') or '').strip()
+    exclude_terms = _parse_csv(directives.get('EXCLUDE'))
+    exclude_terms.extend(_active_only_excludes(_truthy(directives.get('ACTIVE_ONLY'))))
 
     if match_mode == 'ast':
         from forge_core.ast_search import search_ast_files
@@ -348,6 +437,8 @@ def execute(ctx, parsed_op, result):
             except Exception:
                 rel = path
             if path_filter and path_filter not in rel:
+                continue
+            if _path_excluded(rel, exclude_terms):
                 continue
             files.append(path)
 
@@ -386,6 +477,8 @@ def execute(ctx, parsed_op, result):
             header.append('ASSIGNS=%r' % criteria.get('assigns'))
         if path_filter:
             header.append('FILTER=%r' % path_filter)
+        if exclude_terms:
+            header.append('EXCLUDE=%r' % ','.join(exclude_terms))
         header.append('LIMIT=%d' % limit)
         if stopped_at_limit:
             header.append('(limit reached, results may be incomplete)')
@@ -430,6 +523,8 @@ def execute(ctx, parsed_op, result):
             'case_sensitive': case_sensitive,
             'match_mode': match_mode,
             'path_filter': path_filter,
+            'exclude_terms': list(exclude_terms),
+            'suggested_reads': _unique_suggested_reads(hits),
             'exts': sorted(ast_exts),
             'syntax_errors': syntax_errors,
         }
@@ -460,6 +555,8 @@ def execute(ctx, parsed_op, result):
             rel = path
 
         if path_filter and path_filter not in rel:
+            continue
+        if _path_excluded(rel, exclude_terms):
             continue
 
         try:
@@ -523,6 +620,8 @@ def execute(ctx, parsed_op, result):
     header.append('MATCH=' + match_mode)
     if path_filter:
         header.append('FILTER=%r' % path_filter)
+    if exclude_terms:
+        header.append('EXCLUDE=%r' % ','.join(exclude_terms))
     header.append('LIMIT=%d' % limit)
     if context:
         header.append('CONTEXT=%d' % context)
@@ -540,13 +639,23 @@ def execute(ctx, parsed_op, result):
             for lineno in sorted(grouped[rel]):
                 item = grouped[rel][lineno]
                 marker = '>' if item.get('match') else ' '
-                out.append('  %s%04d: %s' % (marker, lineno, item.get('text', '')))
+                kind = _classify_text_hit(rel, item.get('text', '')) if item.get('match') else ''
+                label = (' [%s]' % kind) if kind and item.get('match') else ''
+                out.append('  %s%04d:%s %s' % (marker, lineno, label, item.get('text', '')))
                 if item.get('match'):
                     flat_hits.append({
                         'file': rel,
                         'line': lineno,
                         'text': item.get('text', ''),
+                        'kind': kind,
                     })
+
+    suggested_reads = _unique_suggested_reads(flat_hits)
+    if suggested_reads:
+        out.append('')
+        out.append('Suggested next reads:')
+        for cmd in suggested_reads:
+            out.append('- ' + cmd.replace('\n', ' | '))
 
     result['status'] = 'APPLIED'
     result['message'] = '%d hits across %d files scanned' % (total_hits, searched)
@@ -563,5 +672,7 @@ def execute(ctx, parsed_op, result):
         'match_mode': match_mode,
         'context': context,
         'path_filter': path_filter,
+        'exclude_terms': list(exclude_terms),
+        'suggested_reads': suggested_reads,
         'exts': sorted(exts),
     }
