@@ -35,17 +35,26 @@ Nothing is confirmed until the packet comes back.
 
 ## Quick install
 
-Create a new Pythonista file named:
+Create a new Python file in Pythonista, paste this in and run it once:
 
-    install_forge.py
+    from urllib.request import urlopen
 
-Paste in the installer script from this repo and run it.
+    url = (
+        'https://raw.githubusercontent.com/'
+        'jackatttack/Forge-patcher/main/install_forge.py'
+    )
+    source = urlopen(url).read()
+    exec(compile(source, 'install_forge.py', 'exec'))
 
-The installer downloads this repo and installs Forge into:
+The installer downloads the public Forge release and installs it into:
 
     ~/Documents/forge/
 
-Then open and run:
+Existing Forge installs are backed up before replacement.
+
+You can also read [`install_forge.py`](install_forge.py) before running it.
+
+When installation finishes, open and run:
 
     forge/forge_entry.py
 

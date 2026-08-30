@@ -6,9 +6,8 @@ install_forge.py
 One-file public installer for Forge on Pythonista.
 
 Usage:
-1. Create a new Pythonista file named install_forge.py.
-2. Paste this script into it.
-3. Run it.
+Run this file directly, or use the short bootstrap snippet in the public
+README to download and execute it.
 
 The installer downloads the public GitHub repo zip, extracts it, and installs
 the repo's forge/ folder into Pythonista Documents.
